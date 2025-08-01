@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-users me-2"></i>Gestão de Clientes</h2>
+    <a href="{{ url_for('add_customer') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Novo Cliente
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="data-card mb-4">
+    <form method="GET" class="row g-3">
+        <div class="col-md-6">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Pesquisar clientes...">
+                <label for="search">Pesquisar por nome ou email...</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-outline-primary h-100 w-100">
+                <i class="fas fa-search me-2"></i>Pesquisar
+            </button>
+        </div>
+        {% if search %}
+        <div class="col-md-3">
+            <a href="{{ url_for('customers') }}" class="btn btn-outline-secondary h-100 w-100">
+                <i class="fas fa-times me-2"></i>Limpar
+            </a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Customers Table -->
+<div class="data-card">
+    <div class="header">
+        <h5><i class="fas fa-list me-2"></i>Lista de Clientes</h5>
+        <span class="badge bg-secondary">{{ customers.total }} clientes</span>
+    </div>
+    
+    {% if customers.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th>Cidade</th>
+                        <th>Tipo</th>
+                        <th>Criado em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers.items %}
+                        <tr>
+                            <td>
+                                <strong>{{ customer.name }}</strong>
+                                {% if customer.tax_number %}
+                                    <br><small class="text-muted">NIF: {{ customer.tax_number }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if customer.email %}
+                                    <a href="mailto:{{ customer.email }}">{{ customer.email }}</a>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if customer.phone %}
+                                    <a href="tel:{{ customer.phone }}">{{ customer.phone }}</a>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ customer.city or '-' }}</td>
+                            <td>
+                                <span class="status-badge status-badge-{{ 'info' if customer.customer_type == 'empresa' else 'secondary' }}">
+                                    {{ 'Empresa' if customer.customer_type == 'empresa' else 'Particular' }}
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ customer.created_at.strftime('%d/%m/%Y') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info" title="Ver Vendas">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success" title="Nova Venda">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if customers.pages > 1 %}
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-center">
+                    {% if customers.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('customers', page=customers.prev_num, search=search) }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in customers.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != customers.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('customers', page=page_num, search=search) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if customers.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('customers', page=customers.next_num, search=search) }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+            <p>Nenhum cliente encontrado</p>
+            <a href="{{ url_for('add_customer') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Adicionar Primeiro Cliente
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

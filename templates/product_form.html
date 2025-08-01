@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}{% if product %}Editar{% else %}Novo{% endif %} Produto - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-box me-2"></i>{% if product %}Editar{% else %}Novo{% endif %} Produto</h2>
+    <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="data-card">
+    <form method="POST" action="{{ url_for('add_product') if not product else url_for('edit_product', id=product.id) }}">
+        <div class="row g-3">
+            <!-- Basic Information -->
+            <div class="col-12">
+                <h5 class="text-primary border-bottom pb-2 mb-3">Informações Básicas</h5>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="code" name="code" value="{{ product.code if product }}" required>
+                    <label for="code">Código do Produto *</label>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="name" name="name" value="{{ product.name if product }}" required>
+                    <label for="name">Nome do Produto *</label>
+                </div>
+            </div>
+            
+            <div class="col-12">
+                <div class="form-floating">
+                    <textarea class="form-control" id="description" name="description" style="height: 100px;">{{ product.description if product }}</textarea>
+                    <label for="description">Descrição</label>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <select class="form-select" id="category_id" name="category_id" required>
+                        <option value="">Selecione uma categoria</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {{ 'selected' if product and product.category_id == category.id }}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="category_id">Categoria *</label>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <select class="form-select" id="supplier_id" name="supplier_id">
+                        <option value="">Selecione um fornecedor</option>
+                        {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}" {{ 'selected' if product and product.supplier_id == supplier.id }}>{{ supplier.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="supplier_id">Fornecedor</label>
+                </div>
+            </div>
+            
+            <!-- Pricing -->
+            <div class="col-12 mt-4">
+                <h5 class="text-primary border-bottom pb-2 mb-3">Preços</h5>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="purchase_price" name="purchase_price" 
+                           value="{{ product.purchase_price if product }}" step="0.01" min="0">
+                    <label for="purchase_price">Preço de Compra (€)</label>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="sale_price" name="sale_price" 
+                           value="{{ product.sale_price if product }}" step="0.01" min="0" required>
+                    <label for="sale_price">Preço de Venda (€) *</label>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="tax_rate" name="tax_rate" 
+                           value="{{ product.tax_rate if product else '23.00' }}" step="0.01" min="0" max="100">
+                    <label for="tax_rate">Taxa IVA (%)</label>
+                </div>
+            </div>
+            
+            <!-- Inventory -->
+            <div class="col-12 mt-4">
+                <h5 class="text-primary border-bottom pb-2 mb-3">Inventário</h5>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <select class="form-select" id="unit" name="unit">
+                        <option value="unidade" {{ 'selected' if not product or product.unit == 'unidade' }}>Unidade</option>
+                        <option value="kg" {{ 'selected' if product and product.unit == 'kg' }}>Quilograma</option>
+                        <option value="litro" {{ 'selected' if product and product.unit == 'litro' }}>Litro</option>
+                        <option value="metro" {{ 'selected' if product and product.unit == 'metro' }}>Metro</option>
+                        <option value="caixa" {{ 'selected' if product and product.unit == 'caixa' }}>Caixa</option>
+                        <option value="pacote" {{ 'selected' if product and product.unit == 'pacote' }}>Pacote</option>
+                    </select>
+                    <label for="unit">Unidade</label>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" 
+                           value="{{ product.stock_quantity if product else '0' }}" min="0">
+                    <label for="stock_quantity">Stock Atual</label>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="min_stock" name="min_stock" 
+                           value="{{ product.min_stock if product else '5' }}" min="0">
+                    <label for="min_stock">Stock Mínimo</label>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="max_stock" name="max_stock" 
+                           value="{{ product.max_stock if product else '100' }}" min="0">
+                    <label for="max_stock">Stock Máximo</label>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="col-12 mt-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>{% if product %}Atualizar{% else %}Criar{% endif %} Produto
+                    </button>
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Calculate profit margin when prices change
+        const purchasePrice = document.getElementById('purchase_price');
+        const salePrice = document.getElementById('sale_price');
+        
+        function calculateMargin() {
+            const purchase = parseFloat(purchasePrice.value) || 0;
+            const sale = parseFloat(salePrice.value) || 0;
+            
+            if (purchase > 0 && sale > 0) {
+                const margin = ((sale - purchase) / purchase * 100).toFixed(2);
+                console.log('Margem de lucro:', margin + '%');
+            }
+        }
+        
+        purchasePrice.addEventListener('input', calculateMargin);
+        salePrice.addEventListener('input', calculateMargin);
+    });
+</script>
+{% endblock %}

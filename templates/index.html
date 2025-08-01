@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - GestVendas{% endblock %}
+
+{% block content %}
+        <!-- Dashboard Content -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+                <div class="text-muted">
+                    <i class="fas fa-calendar me-1"></i>
+                    <span id="currentDate"></span>
+                </div>
+            </div>
+
+            <!-- Dashboard Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="dash-card sales">
+                        <h5>Vendas do Mês</h5>
+                        <div class="value text-success">{{ format_currency(stats.monthly_sales) }}</div>
+                        <div class="trend">
+                            <i class="fas fa-arrow-up text-success"></i>
+                            <span class="text-success">Total: {{ format_currency(stats.total_sales) }}</span>
+                        </div>
+                        <i class="fas fa-shopping-cart icon"></i>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="dash-card purchases">
+                        <h5>Compras do Mês</h5>
+                        <div class="value text-warning">{{ format_currency(stats.monthly_purchases) }}</div>
+                        <div class="trend">
+                            <span class="text-muted">Total: {{ format_currency(stats.total_purchases) }}</span>
+                        </div>
+                        <i class="fas fa-shopping-bag icon"></i>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="dash-card profit">
+                        <h5>Lucro Estimado</h5>
+                        <div class="value text-info">{{ format_currency(stats.profit) }}</div>
+                        <div class="trend">
+                            <i class="fas fa-chart-line text-info"></i>
+                            <span class="text-info">Em crescimento</span>
+                        </div>
+                        <i class="fas fa-euro-sign icon"></i>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="dash-card alerts">
+                        <h5>Alertas de Stock</h5>
+                        <div class="value text-danger">{{ stats.low_stock_alerts }}</div>
+                        <div class="trend">
+                            <i class="fas fa-exclamation-triangle text-danger"></i>
+                            <span class="text-danger">Produtos em falta</span>
+                        </div>
+                        <i class="fas fa-exclamation-triangle icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-xl-8">
+                    <div class="chart-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-chart-line me-2"></i>Vendas Mensais</h5>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary btn-sm active">12 Meses</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm">6 Meses</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm">3 Meses</button>
+                            </div>
+                        </div>
+                        <canvas id="salesChart" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <div class="col-xl-4">
+                    <div class="chart-container">
+                        <h5><i class="fas fa-chart-pie me-2"></i>Top Produtos</h5>
+                        <canvas id="productsChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Tables Row -->
+            <div class="row">
+                <div class="col-xl-7">
+                    <div class="data-card">
+                        <div class="header">
+                            <h5><i class="fas fa-receipt me-2"></i>Vendas Recentes</h5>
+                            <a href="{{ url_for('sales') }}" class="btn btn-outline-primary btn-sm">Ver Todas</a>
+                        </div>
+                        
+                        {% if stats.recent_sales %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Fatura</th>
+                                            <th>Cliente</th>
+                                            <th>Total</th>
+                                            <th>Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for sale, customer_name in stats.recent_sales %}
+                                            <tr>
+                                                <td><span class="badge bg-primary">{{ sale.invoice_number }}</span></td>
+                                                <td>{{ customer_name }}</td>
+                                                <td><strong>{{ format_currency(sale.total_amount) }}</strong></td>
+                                                <td><small class="text-muted">{{ sale.sale_date.strftime('%d/%m/%Y') }}</small></td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="fas fa-receipt fa-3x mb-3 opacity-50"></i>
+                                <p>Nenhuma venda registrada</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-xl-5">
+                    <div class="data-card">
+                        <div class="header">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Alertas de Stock</h5>
+                            <a href="#" class="btn btn-outline-danger btn-sm">Gerir Stock</a>
+                        </div>
+                        
+                        {% if stats.restock_products %}
+                            {% for product in stats.restock_products %}
+                                <div class="alert-item">
+                                    <div class="alert-icon">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="alert-info">
+                                        <div class="alert-title">{{ product.name }}</div>
+                                        <div class="alert-desc">
+                                            Stock atual: {{ product.stock_quantity }} {{ product.unit }}
+                                            <br>Mínimo: {{ product.min_stock }} {{ product.unit }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="fas fa-check-circle fa-3x mb-3 opacity-50 text-success"></i>
+                                <p>Todos os produtos têm stock adequado</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Initialize dashboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pt-PT');
+            
+            // Show toasts
+            var toasts = document.querySelectorAll('.toast');
+            toasts.forEach(function(toast) {
+                var bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+            });
+            
+            // Load dashboard charts
+            loadDashboardCharts();
+        });
+        
+        function loadDashboardCharts() {
+            fetch('/api/dashboard/charts')
+                .then(response => response.json())
+                .then(data => {
+                    // Sales Chart
+                    const salesCtx = document.getElementById('salesChart').getContext('2d');
+                    new Chart(salesCtx, {
+                        type: 'line',
+                        data: {
+                            labels: data.sales.labels,
+                            datasets: [{
+                                label: 'Vendas (€)',
+                                data: data.sales.data,
+                                borderColor: '#2563eb',
+                                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return new Intl.NumberFormat('pt-PT', {
+                                                style: 'currency',
+                                                currency: 'EUR'
+                                            }).format(value);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Products Chart
+                    const productsCtx = document.getElementById('productsChart').getContext('2d');
+                    new Chart(productsCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.products.labels,
+                            datasets: [{
+                                data: data.products.revenues,
+                                backgroundColor: [
+                                    '#2563eb',
+                                    '#22c55e',
+                                    '#eab308',
+                                    '#ef4444',
+                                    '#0ea5e9'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ' + new Intl.NumberFormat('pt-PT', {
+                                                style: 'currency',
+                                                currency: 'EUR'
+                                            }).format(context.raw);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading dashboard charts:', error);
+                });
+        }
+    </script>
+{% endblock %}s: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return new Intl.NumberFormat('pt-PT', {
+                                                style: 'currency',
+                                                currency: 'EUR'
+                                            }).format(value);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Products Chart
+                    const productsCtx = document.getElementById('productsChart').getContext('2d');
+                    new Chart(productsCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.products.labels,
+                            datasets: [{
+                                data: data.products.revenues,
+                                backgroundColor: [
+                                    '#2563eb',
+                                    '#22c55e',
+                                    '#eab308',
+                                    '#ef4444',
+                                    '#0ea5e9'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading dashboard charts:', error);
+                });
+        }
+    </script>
+</body>
+</html>

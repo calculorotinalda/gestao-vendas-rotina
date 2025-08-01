@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}{% if sale %}Editar{% else %}Nova{% endif %} Venda - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-shopping-cart me-2"></i>{% if sale %}Editar{% else %}Nova{% endif %} Venda</h2>
+    <a href="{{ url_for('sales') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="data-card">
+    <form method="POST" action="{{ url_for('add_sale') if not sale else url_for('edit_sale', id=sale.id) }}">
+        <div class="row g-3">
+            <!-- Sale Information -->
+            <div class="col-12">
+                <h5 class="text-primary border-bottom pb-2 mb-3">Informações da Venda</h5>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <select class="form-select" id="customer_id" name="customer_id" required>
+                        <option value="">Selecione um cliente</option>
+                        {% for customer in customers %}
+                            <option value="{{ customer.id }}" {{ 'selected' if sale and sale.customer_id == customer.id }}>{{ customer.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="customer_id">Cliente *</label>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="sale_date" name="sale_date" 
+                           value="{{ sale.sale_date.strftime('%Y-%m-%d') if sale else '' }}" required>
+                    <label for="sale_date">Data da Venda *</label>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <select class="form-select" id="payment_method" name="payment_method">
+                        <option value="">Selecione o método</option>
+                        <option value="dinheiro" {{ 'selected' if sale and sale.payment_method == 'dinheiro' }}>Dinheiro</option>
+                        <option value="cartao" {{ 'selected' if sale and sale.payment_method == 'cartao' }}>Cartão</option>
+                        <option value="transferencia" {{ 'selected' if sale and sale.payment_method == 'transferencia' }}>Transferência</option>
+                        <option value="mbway" {{ 'selected' if sale and sale.payment_method == 'mbway' }}>MB WAY</option>
+                    </select>
+                    <label for="payment_method">Método de Pagamento</label>
+                </div>
+            </div>
+            
+            <!-- Product Selection -->
+            <div class="col-12 mt-4">
+                <h5 class="text-primary border-bottom pb-2 mb-3">Produtos</h5>
+            </div>
+            
+            <div class="col-12">
+                <div id="products-container">
+                    <div class="product-row row g-2 mb-2">
+                        <div class="col-md-5">
+                            <select class="form-select product-select" name="products" required>
+                                <option value="">Selecione um produto</option>
+                                {% for product in products %}
+                                    <option value="{{ product.id }}" data-price="{{ product.sale_price }}" data-stock="{{ product.stock_quantity }}" data-unit="{{ product.unit }}">
+                                        {{ product.name }} - {{ format_currency(product.sale_price) }} (Stock: {{ product.stock_quantity }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control quantity-input" name="quantities" placeholder="Qtd" min="1" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control price-input" name="unit_prices" placeholder="Preço" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control total-input" placeholder="Total" readonly>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-outline-danger remove-product" disabled>
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-outline-primary" id="add-product">
+                    <i class="fas fa-plus me-2"></i>Adicionar Produto
+                </button>
+            </div>
+            
+            <!-- Totals -->
+            <div class="col-12 mt-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <textarea class="form-control" id="notes" name="notes" style="height: 100px;">{{ sale.notes if sale }}</textarea>
+                            <label for="notes">Observações</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Resumo da Venda</h6>
+                                <div class="d-flex justify-content-between">
+                                    <span>Subtotal:</span>
+                                    <span id="subtotal-display">0,00 €</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>IVA:</span>
+                                    <span id="tax-display">0,00 €</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Total:</span>
+                                    <span id="total-display">0,00 €</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="col-12 mt-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>{% if sale %}Atualizar{% else %}Registrar{% endif %} Venda
+                    </button>
+                    <a href="{{ url_for('sales') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('sale_date').value = today;
+        
+        let productRowIndex = 0;
+        
+        // Add product row
+        document.getElementById('add-product').addEventListener('click', function() {
+            const container = document.getElementById('products-container');
+            const newRow = container.querySelector('.product-row').cloneNode(true);
+            
+            // Clear values
+            newRow.querySelectorAll('input, select').forEach(input => {
+                input.value = '';
+                if (input.classList.contains('total-input')) {
+                    input.value = '';
+                }
+            });
+            
+            // Enable remove button
+            const removeBtn = newRow.querySelector('.remove-product');
+            removeBtn.disabled = false;
+            removeBtn.addEventListener('click', function() {
+                newRow.remove();
+                calculateTotals();
+            });
+            
+            container.appendChild(newRow);
+            setupProductRow(newRow);
+        });
+        
+        // Setup initial product row
+        setupProductRow(document.querySelector('.product-row'));
+        
+        function setupProductRow(row) {
+            const productSelect = row.querySelector('.product-select');
+            const quantityInput = row.querySelector('.quantity-input');
+            const priceInput = row.querySelector('.price-input');
+            const totalInput = row.querySelector('.total-input');
+            
+            // Update price when product changes
+            productSelect.addEventListener('change', function() {
+                const option = this.options[this.selectedIndex];
+                if (option.value) {
+                    const price = parseFloat(option.dataset.price);
+                    const stock = parseInt(option.dataset.stock);
+                    
+                    priceInput.value = price.toFixed(2);
+                    quantityInput.max = stock;
+                    
+                    if (quantityInput.value) {
+                        updateRowTotal(row);
+                    }
+                } else {
+                    priceInput.value = '';
+                    quantityInput.max = '';
+                    totalInput.value = '';
+                }
+            });
+            
+            // Update total when quantity or price changes
+            quantityInput.addEventListener('input', () => updateRowTotal(row));
+            priceInput.addEventListener('input', () => updateRowTotal(row));
+        }
+        
+        function updateRowTotal(row) {
+            const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            const price = parseFloat(row.querySelector('.price-input').value) || 0;
+            const total = quantity * price;
+            
+            row.querySelector('.total-input').value = formatCurrency(total);
+            calculateTotals();
+        }
+        
+        function calculateTotals() {
+            let subtotal = 0;
+            let taxTotal = 0;
+            
+            document.querySelectorAll('.product-row').forEach(row => {
+                const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                const price = parseFloat(row.querySelector('.price-input').value) || 0;
+                const rowTotal = quantity * price;
+                const rowTax = rowTotal * 0.23; // 23% IVA
+                
+                subtotal += rowTotal;
+                taxTotal += rowTax;
+            });
+            
+            const total = subtotal + taxTotal;
+            
+            document.getElementById('subtotal-display').textContent = formatCurrency(subtotal);
+            document.getElementById('tax-display').textContent = formatCurrency(taxTotal);
+            document.getElementById('total-display').textContent = formatCurrency(total);
+        }
+        
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-PT', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(value);
+        }
+    });
+</script>
+{% endblock %}

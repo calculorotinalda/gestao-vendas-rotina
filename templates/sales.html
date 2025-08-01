@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Vendas - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-shopping-cart me-2"></i>Gestão de Vendas</h2>
+    <a href="{{ url_for('add_sale') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Nova Venda
+    </a>
+</div>
+
+<!-- Sales Table -->
+<div class="data-card">
+    <div class="header">
+        <h5><i class="fas fa-list me-2"></i>Lista de Vendas</h5>
+        <span class="badge bg-secondary">{{ sales.total }} vendas</span>
+    </div>
+    
+    {% if sales.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Fatura</th>
+                        <th>Cliente</th>
+                        <th>Data</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Método Pagamento</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale, customer_name in sales.items %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">{{ sale.invoice_number }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ customer_name }}</strong>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ sale.sale_date.strftime('%d/%m/%Y %H:%M') }}</small>
+                            </td>
+                            <td>
+                                <strong>{{ format_currency(sale.total_amount) }}</strong>
+                                {% if sale.subtotal != sale.total_amount %}
+                                    <br><small class="text-muted">Subtotal: {{ format_currency(sale.subtotal) }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if sale.status == 'pago' %}
+                                    <span class="status-badge status-badge-success">Pago</span>
+                                {% elif sale.status == 'pendente' %}
+                                    <span class="status-badge status-badge-warning">Pendente</span>
+                                {% else %}
+                                    <span class="status-badge status-badge-danger">Cancelado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if sale.payment_method %}
+                                    <span class="badge bg-secondary">{{ sale.payment_method.title() }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" title="Ver Detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success" title="Imprimir">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    {% if sale.status == 'pendente' %}
+                                        <button class="btn btn-outline-warning" title="Marcar como Pago">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if sales.pages > 1 %}
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-center">
+                    {% if sales.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('sales', page=sales.prev_num) }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in sales.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != sales.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('sales', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if sales.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('sales', page=sales.next_num) }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-shopping-cart fa-3x mb-3 opacity-50"></i>
+            <p>Nenhuma venda registrada</p>
+            <a href="{{ url_for('add_sale') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Registrar Primeira Venda
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

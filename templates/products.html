@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Produtos - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-box me-2"></i>Gestão de Produtos</h2>
+    <a href="{{ url_for('add_product') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Novo Produto
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="data-card mb-4">
+    <form method="GET" class="row g-3">
+        <div class="col-md-4">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Pesquisar produtos...">
+                <label for="search">Pesquisar produtos...</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating">
+                <select class="form-select" id="category" name="category">
+                    <option value="">Todas as categorias</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {{ 'selected' if category.id == selected_category }}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="category">Categoria</label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-primary h-100 w-100">
+                <i class="fas fa-search me-2"></i>Filtrar
+            </button>
+        </div>
+        {% if search or selected_category %}
+        <div class="col-md-2">
+            <a href="{{ url_for('products') }}" class="btn btn-outline-secondary h-100 w-100">
+                <i class="fas fa-times me-2"></i>Limpar
+            </a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Products Table -->
+<div class="data-card">
+    <div class="header">
+        <h5><i class="fas fa-list me-2"></i>Lista de Produtos</h5>
+        <span class="badge bg-secondary">{{ products.total }} produtos</span>
+    </div>
+    
+    {% if products.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Preço Venda</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products.items %}
+                        <tr>
+                            <td><code>{{ product.code }}</code></td>
+                            <td>
+                                <strong>{{ product.name }}</strong>
+                                {% if product.description %}
+                                    <br><small class="text-muted">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ product.category.name }}</td>
+                            <td><strong>{{ format_currency(product.sale_price) }}</strong></td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if product.stock_quantity > product.min_stock else 'warning' if product.stock_quantity > 0 else 'danger' }}">
+                                    {{ product.stock_quantity }} {{ product.unit }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if product.stock_quantity <= 0 %}
+                                    <span class="status-badge status-badge-danger">Sem Stock</span>
+                                {% elif product.stock_quantity <= product.min_stock %}
+                                    <span class="status-badge status-badge-warning">Stock Baixo</span>
+                                {% else %}
+                                    <span class="status-badge status-badge-success">Stock OK</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info" title="Ver Detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if products.pages > 1 %}
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-center">
+                    {% if products.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('products', page=products.prev_num, search=search, category=selected_category) }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in products.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != products.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('products', page=page_num, search=search, category=selected_category) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if products.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('products', page=products.next_num, search=search, category=selected_category) }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-box fa-3x mb-3 opacity-50"></i>
+            <p>Nenhum produto encontrado</p>
+            <a href="{{ url_for('add_product') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Adicionar Primeiro Produto
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

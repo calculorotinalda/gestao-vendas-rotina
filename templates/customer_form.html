@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}{% if customer %}Editar{% else %}Novo{% endif %} Cliente - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-user-plus me-2"></i>{% if customer %}Editar{% else %}Novo{% endif %} Cliente</h2>
+    <a href="{{ url_for('customers') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="data-card">
+    <form method="POST" action="{{ url_for('add_customer') if not customer else url_for('edit_customer', id=customer.id) }}">
+        <div class="row g-3">
+            <!-- Basic Information -->
+            <div class="col-12">
+                <h5 class="text-primary border-bottom pb-2 mb-3">Informações Básicas</h5>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="name" name="name" value="{{ customer.name if customer }}" required>
+                    <label for="name">Nome Completo / Razão Social *</label>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <select class="form-select" id="customer_type" name="customer_type">
+                        <option value="particular" {{ 'selected' if not customer or customer.customer_type == 'particular' }}>Particular</option>
+                        <option value="empresa" {{ 'selected' if customer and customer.customer_type == 'empresa' }}>Empresa</option>
+                    </select>
+                    <label for="customer_type">Tipo de Cliente</label>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <input type="email" class="form-control" id="email" name="email" value="{{ customer.email if customer }}">
+                    <label for="email">Email</label>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ customer.phone if customer }}">
+                    <label for="phone">Telefone</label>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="tax_number" name="tax_number" value="{{ customer.tax_number if customer }}">
+                    <label for="tax_number">Número Fiscal (NIF)</label>
+                </div>
+            </div>
+            
+            <!-- Address Information -->
+            <div class="col-12 mt-4">
+                <h5 class="text-primary border-bottom pb-2 mb-3">Endereço</h5>
+            </div>
+            
+            <div class="col-12">
+                <div class="form-floating">
+                    <textarea class="form-control" id="address" name="address" style="height: 100px;">{{ customer.address if customer }}</textarea>
+                    <label for="address">Morada</label>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="city" name="city" value="{{ customer.city if customer }}">
+                    <label for="city">Cidade</label>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="postal_code" name="postal_code" value="{{ customer.postal_code if customer }}">
+                    <label for="postal_code">Código Postal</label>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <select class="form-select" id="country" name="country">
+                        <option value="Portugal" {{ 'selected' if not customer or customer.country == 'Portugal' }}>Portugal</option>
+                        <option value="Espanha" {{ 'selected' if customer and customer.country == 'Espanha' }}>Espanha</option>
+                        <option value="França" {{ 'selected' if customer and customer.country == 'França' }}>França</option>
+                        <option value="Brasil" {{ 'selected' if customer and customer.country == 'Brasil' }}>Brasil</option>
+                        <option value="Outro" {{ 'selected' if customer and customer.country not in ['Portugal', 'Espanha', 'França', 'Brasil'] }}>Outro</option>
+                    </select>
+                    <label for="country">País</label>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="col-12 mt-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>{% if customer %}Atualizar{% else %}Criar{% endif %} Cliente
+                    </button>
+                    <a href="{{ url_for('customers') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Format phone number input
+        const phoneInput = document.getElementById('phone');
+        phoneInput.addEventListener('input', function(e) {
+            // Basic phone formatting for Portuguese numbers
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 9) {
+                value = value.substring(0, 9);
+                if (value.startsWith('9')) {
+                    // Mobile: 9XX XXX XXX
+                    value = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+                } else {
+                    // Landline: 2XX XXX XXX
+                    value = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+                }
+            }
+            e.target.value = value;
+        });
+        
+        // Format postal code input
+        const postalCodeInput = document.getElementById('postal_code');
+        postalCodeInput.addEventListener('input', function(e) {
+            // Portuguese postal code format: XXXX-XXX
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 4) {
+                value = value.substring(0, 7);
+                value = value.replace(/(\d{4})(\d{0,3})/, '$1-$2');
+            }
+            e.target.value = value;
+        });
+    });
+</script>
+{% endblock %}
