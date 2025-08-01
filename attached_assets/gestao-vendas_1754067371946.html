@@ -1,0 +1,3449 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GestVendas - Sistema de Gestão de Vendas e Compras</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+    <style id="app-style">
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #eab308;
+            --info: #0ea5e9;
+            --light: #f1f5f9;
+            --dark: #0f172a;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            overflow-x: hidden;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 250px;
+            z-index: 100;
+            background-color: var(--dark);
+            color: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .sidebar-collapsed {
+            width: 70px;
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-brand h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            white-space: nowrap;
+        }
+        
+        .sidebar-nav {
+            padding: 1rem 0.5rem;
+        }
+        
+        .sidebar-heading {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.5);
+            white-space: nowrap;
+        }
+        
+        .sidebar-item {
+            padding: 0.7rem 1rem;
+            display: flex;
+            align-items: center;
+            border-radius: 0.375rem;
+            margin-bottom: 0.25rem;
+            color: rgba(255,255,255,0.7);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .sidebar-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .sidebar-item.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .sidebar-item i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+            width: 1.5rem;
+            text-align: center;
+        }
+        
+        .sidebar-item .text {
+            white-space: nowrap;
+        }
+        
+        .sidebar-collapsed .text,
+        .sidebar-collapsed .sidebar-heading,
+        .sidebar-collapsed .brand-text {
+            display: none;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            transition: all 0.3s;
+            padding: 1rem;
+            min-height: 100vh;
+        }
+        
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+        
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+            margin-bottom: 1rem;
+        }
+        
+        .toggle-sidebar {
+            border: none;
+            background: none;
+            color: var(--secondary);
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+        }
+        
+        .dash-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .dash-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .dash-card.sales {
+            border-left-color: var(--success);
+        }
+        
+        .dash-card.purchases {
+            border-left-color: var(--warning);
+        }
+        
+        .dash-card.profit {
+            border-left-color: var(--info);
+        }
+        
+        .dash-card.alerts {
+            border-left-color: var(--danger);
+        }
+        
+        .dash-card h5 {
+            color: var(--secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .dash-card .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .dash-card .trend {
+            font-size: 0.85rem;
+        }
+        
+        .dash-card .icon {
+            float: right;
+            font-size: 2.5rem;
+            opacity: 0.2;
+            margin-top: -3rem;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .data-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .data-card .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.75rem;
+        }
+        
+        .alert-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+        
+        .alert-item .alert-icon {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 1rem;
+        }
+        
+        .alert-item .alert-info {
+            flex: 1;
+        }
+        
+        .alert-item .alert-title {
+            font-weight: 600;
+        }
+        
+        .alert-item .alert-desc {
+            color: var(--secondary);
+            font-size: 0.85rem;
+        }
+        
+        .modal-content {
+            border-radius: 0.5rem;
+            border: none;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .page-container {
+            display: none;
+        }
+        
+        .page-container.active {
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading.active {
+            display: flex;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(37, 99, 235, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        table.dataTable thead th {
+            position: relative;
+            background-image: none !important;
+        }
+        
+        table.dataTable thead th.sorting:after,
+        table.dataTable thead th.sorting_asc:after,
+        table.dataTable thead th.sorting_desc:after {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: block;
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            opacity: 0.5;
+        }
+        
+        table.dataTable thead th.sorting:after {
+            content: "\f0dc";
+            color: #aaa;
+            opacity: 0.2;
+        }
+        
+        table.dataTable thead th.sorting_asc:after {
+            content: "\f0de";
+            opacity: 1;
+        }
+        
+        table.dataTable thead th.sorting_desc:after {
+            content: "\f0dd";
+            opacity: 1;
+        }
+        
+        .report-filters {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .status-badge {
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-badge-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+        
+        .status-badge-warning {
+            background-color: rgba(234, 179, 8, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-badge-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .status-badge-info {
+            background-color: rgba(14, 165, 233, 0.1);
+            color: var(--info);
+        }
+        
+        .status-badge-secondary {
+            background-color: rgba(100, 116, 139, 0.1);
+            color: var(--secondary);
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .main-content.expanded {
+                margin-left: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dash-cards {
+                flex-direction: column;
+            }
+            
+            .dash-card {
+                width: 100% !important;
+            }
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+        }
+        
+        .toast {
+            background-color: white;
+            color: var(--dark);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .toast-header {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Indicator -->
+    <div class="loading">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div class="toast-container"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-chart-line me-2"></i>
+            <h1 class="brand-text">GestVendas</h1>
+        </div>
+        <div class="sidebar-nav">
+            <div class="sidebar-heading">Principal</div>
+            <div class="sidebar-item active" data-page="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span class="text">Dashboard</span>
+            </div>
+            
+            <div class="sidebar-heading">Entidades</div>
+            <div class="sidebar-item" data-page="products">
+                <i class="fas fa-box"></i>
+                <span class="text">Produtos</span>
+            </div>
+            <div class="sidebar-item" data-page="customers">
+                <i class="fas fa-users"></i>
+                <span class="text">Clientes</span>
+            </div>
+            <div class="sidebar-item" data-page="suppliers">
+                <i class="fas fa-truck"></i>
+                <span class="text">Fornecedores</span>
+            </div>
+            <div class="sidebar-item" data-page="sales">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="text">Vendas</span>
+            </div>
+            <div class="sidebar-item" data-page="purchases">
+                <i class="fas fa-shopping-basket"></i>
+                <span class="text">Compras</span>
+            </div>
+            <div class="sidebar-item" data-page="inventory">
+                <i class="fas fa-warehouse"></i>
+                <span class="text">Estoque</span>
+            </div>
+            
+            <div class="sidebar-heading">Relatórios</div>
+            <div class="sidebar-item" data-page="reports">
+                <i class="fas fa-file-alt"></i>
+                <span class="text">Relatórios</span>
+            </div>
+            
+            <div class="sidebar-heading">Sistema</div>
+            <div class="sidebar-item" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span class="text">Configurações</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <div class="top-bar">
+            <button class="toggle-sidebar" id="toggle-sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="user-info">
+                <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt="User Profile">
+                <span>Admin</span>
+            </div>
+        </div>
+        
+        <!-- Dashboard Page -->
+        <div class="page-container active" id="dashboard-page">
+            <h2 class="mb-4">Dashboard</h2>
+            
+            <div class="row dash-cards">
+                <div class="col-md-6 col-lg-3">
+                    <div class="dash-card sales">
+                        <h5>Total de Vendas</h5>
+                        <div class="value">R$ 25.450,00</div>
+                        <div class="trend text-success"><i class="fas fa-arrow-up"></i> 12% este mês</div>
+                        <div class="icon"><i class="fas fa-chart-line"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="dash-card purchases">
+                        <h5>Total de Compras</h5>
+                        <div class="value">R$ 18.230,00</div>
+                        <div class="trend text-danger"><i class="fas fa-arrow-down"></i> 5% este mês</div>
+                        <div class="icon"><i class="fas fa-shopping-basket"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="dash-card profit">
+                        <h5>Lucro/Prejuízo</h5>
+                        <div class="value">R$ 7.220,00</div>
+                        <div class="trend text-success"><i class="fas fa-arrow-up"></i> 8% este mês</div>
+                        <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="dash-card alerts">
+                        <h5>Alertas de Estoque</h5>
+                        <div class="value">12</div>
+                        <div class="trend">Produtos com estoque baixo</div>
+                        <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="chart-container">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0">Vendas vs Compras</h5>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary">Semana</button>
+                                <button type="button" class="btn btn-sm btn-primary">Mês</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary">Ano</button>
+                            </div>
+                        </div>
+                        <canvas id="salesVsPurchasesChart" height="300"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="data-card h-100">
+                        <div class="header">
+                            <h5 class="mb-0">Alertas de Estoque</h5>
+                            <a href="javascript:void(0)" class="text-primary">Ver todos</a>
+                        </div>
+                        <div class="alert-list">
+                            <div class="alert-item">
+                                <div class="alert-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="alert-info">
+                                    <div class="alert-title">Smartphone XYZ</div>
+                                    <div class="alert-desc">Apenas 2 unidades em estoque</div>
+                                </div>
+                            </div>
+                            <div class="alert-item">
+                                <div class="alert-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="alert-info">
+                                    <div class="alert-title">Notebook ABC</div>
+                                    <div class="alert-desc">Apenas 3 unidades em estoque</div>
+                                </div>
+                            </div>
+                            <div class="alert-item">
+                                <div class="alert-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="alert-info">
+                                    <div class="alert-title">Tablet 123</div>
+                                    <div class="alert-desc">Apenas 1 unidade em estoque</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h5 class="mb-3">Vendas por Categoria</h5>
+                        <canvas id="salesByCategoryChart" height="250"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h5 class="mb-3">Top 5 Clientes</h5>
+                        <canvas id="topCustomersChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="data-card mt-4">
+                <div class="header">
+                    <h5 class="mb-0">Últimas Vendas</h5>
+                    <a href="javascript:void(0)" class="text-primary" data-page="sales">Ver todas</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nº Pedido</th>
+                                <th>Cliente</th>
+                                <th>Data</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>VD-2025001</td>
+                                <td>Maria Silva</td>
+                                <td>15/04/2025</td>
+                                <td>R$ 1.450,00</td>
+                                <td><span class="status-badge status-badge-success">Concluído</span></td>
+                            </tr>
+                            <tr>
+                                <td>VD-2025002</td>
+                                <td>João Oliveira</td>
+                                <td>14/04/2025</td>
+                                <td>R$ 850,00</td>
+                                <td><span class="status-badge status-badge-warning">Pendente</span></td>
+                            </tr>
+                            <tr>
+                                <td>VD-2025003</td>
+                                <td>Ana Santos</td>
+                                <td>13/04/2025</td>
+                                <td>R$ 2.300,00</td>
+                                <td><span class="status-badge status-badge-success">Concluído</span></td>
+                            </tr>
+                            <tr>
+                                <td>VD-2025004</td>
+                                <td>Carlos Mendes</td>
+                                <td>12/04/2025</td>
+                                <td>R$ 950,00</td>
+                                <td><span class="status-badge status-badge-info">Em entrega</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Products Page -->
+        <div class="page-container" id="products-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Produtos</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal">
+                    <i class="fas fa-plus"></i> Novo Produto
+                </button>
+            </div>
+            
+            <div class="data-card">
+                <table id="productsTable" class="table table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nome</th>
+                            <th>Categoria</th>
+                            <th>Preço de Venda</th>
+                            <th>Estoque</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>P001</td>
+                            <td>Smartphone XYZ</td>
+                            <td>Eletrônicos</td>
+                            <td>R$ 1.999,00</td>
+                            <td>2</td>
+                            <td><span class="status-badge status-badge-danger">Estoque Baixo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#productModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>P002</td>
+                            <td>Notebook ABC</td>
+                            <td>Eletrônicos</td>
+                            <td>R$ 3.500,00</td>
+                            <td>3</td>
+                            <td><span class="status-badge status-badge-danger">Estoque Baixo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#productModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>P003</td>
+                            <td>Tablet 123</td>
+                            <td>Eletrônicos</td>
+                            <td>R$ 1.200,00</td>
+                            <td>1</td>
+                            <td><span class="status-badge status-badge-danger">Estoque Baixo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#productModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>P004</td>
+                            <td>Smart TV 50"</td>
+                            <td>Eletrônicos</td>
+                            <td>R$ 2.800,00</td>
+                            <td>15</td>
+                            <td><span class="status-badge status-badge-success">Em Estoque</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#productModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Customers Page -->
+        <div class="page-container" id="customers-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Clientes</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#customerModal">
+                    <i class="fas fa-plus"></i> Novo Cliente
+                </button>
+            </div>
+            
+            <div class="data-card">
+                <table id="customersTable" class="table table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                            <th>Cidade</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>C001</td>
+                            <td>Maria Silva</td>
+                            <td>maria@exemplo.com</td>
+                            <td>(11) 98765-4321</td>
+                            <td>São Paulo</td>
+                            <td><span class="status-badge status-badge-success">Ativo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#customerModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>C002</td>
+                            <td>João Oliveira</td>
+                            <td>joao@exemplo.com</td>
+                            <td>(21) 98765-4321</td>
+                            <td>Rio de Janeiro</td>
+                            <td><span class="status-badge status-badge-success">Ativo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#customerModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>C003</td>
+                            <td>Ana Santos</td>
+                            <td>ana@exemplo.com</td>
+                            <td>(31) 98765-4321</td>
+                            <td>Belo Horizonte</td>
+                            <td><span class="status-badge status-badge-success">Ativo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#customerModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>C004</td>
+                            <td>Carlos Mendes</td>
+                            <td>carlos@exemplo.com</td>
+                            <td>(41) 98765-4321</td>
+                            <td>Curitiba</td>
+                            <td><span class="status-badge status-badge-secondary">Inativo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#customerModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Suppliers Page -->
+        <div class="page-container" id="suppliers-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Fornecedores</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#supplierModal">
+                    <i class="fas fa-plus"></i> Novo Fornecedor
+                </button>
+            </div>
+            
+            <div class="data-card">
+                <table id="suppliersTable" class="table table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Contato</th>
+                            <th>Telefone</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>F001</td>
+                            <td>TechSolutions Ltda</td>
+                            <td>Roberto Almeida</td>
+                            <td>(11) 3456-7890</td>
+                            <td>contato@techsolutions.com</td>
+                            <td><span class="status-badge status-badge-success">Ativo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#supplierModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>F002</td>
+                            <td>Eletrônicos Brasil S/A</td>
+                            <td>Carla Mendonça</td>
+                            <td>(21) 3456-7890</td>
+                            <td>vendas@eletronicobrasil.com</td>
+                            <td><span class="status-badge status-badge-success">Ativo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#supplierModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>F003</td>
+                            <td>Import Tech</td>
+                            <td>Fernando Costa</td>
+                            <td>(31) 3456-7890</td>
+                            <td>import@importtech.com</td>
+                            <td><span class="status-badge status-badge-success">Ativo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#supplierModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>F004</td>
+                            <td>Mega Distribuidora</td>
+                            <td>Patricia Santos</td>
+                            <td>(41) 3456-7890</td>
+                            <td>contato@megadistri.com</td>
+                            <td><span class="status-badge status-badge-secondary">Inativo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#supplierModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Sales Page -->
+        <div class="page-container" id="sales-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Vendas</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#saleModal">
+                    <i class="fas fa-plus"></i> Nova Venda
+                </button>
+            </div>
+            
+            <div class="data-card">
+                <table id="salesTable" class="table table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Nº Pedido</th>
+                            <th>Cliente</th>
+                            <th>Data</th>
+                            <th>Valor Total</th>
+                            <th>Método Pgto.</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>VD-2025001</td>
+                            <td>Maria Silva</td>
+                            <td>15/04/2025</td>
+                            <td>R$ 1.450,00</td>
+                            <td>Cartão de Crédito</td>
+                            <td><span class="status-badge status-badge-success">Concluído</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#viewSaleModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>VD-2025002</td>
+                            <td>João Oliveira</td>
+                            <td>14/04/2025</td>
+                            <td>R$ 850,00</td>
+                            <td>Pix</td>
+                            <td><span class="status-badge status-badge-warning">Pendente</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#viewSaleModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>VD-2025003</td>
+                            <td>Ana Santos</td>
+                            <td>13/04/2025</td>
+                            <td>R$ 2.300,00</td>
+                            <td>Cartão de Crédito</td>
+                            <td><span class="status-badge status-badge-success">Concluído</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#viewSaleModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>VD-2025004</td>
+                            <td>Carlos Mendes</td>
+                            <td>12/04/2025</td>
+                            <td>R$ 950,00</td>
+                            <td>Boleto</td>
+                            <td><span class="status-badge status-badge-info">Em entrega</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#viewSaleModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Purchases Page -->
+        <div class="page-container" id="purchases-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Compras</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#purchaseModal">
+                    <i class="fas fa-plus"></i> Nova Compra
+                </button>
+            </div>
+            
+            <div class="data-card">
+                <table id="purchasesTable" class="table table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Nº Pedido</th>
+                            <th>Fornecedor</th>
+                            <th>Data</th>
+                            <th>Valor Total</th>
+                            <th>Método Pgto.</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CP-2025001</td>
+                            <td>TechSolutions Ltda</td>
+                            <td>10/04/2025</td>
+                            <td>R$ 8.450,00</td>
+                            <td>Transferência</td>
+                            <td><span class="status-badge status-badge-success">Recebido</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#viewPurchaseModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>CP-2025002</td>
+                            <td>Eletrônicos Brasil S/A</td>
+                            <td>08/04/2025</td>
+                            <td>R$ 5.320,00</td>
+                            <td>Boleto</td>
+                            <td><span class="status-badge status-badge-warning">Pendente</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#viewPurchaseModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>CP-2025003</td>
+                            <td>Import Tech</td>
+                            <td>05/04/2025</td>
+                            <td>R$ 3.150,00</td>
+                            <td>Transferência</td>
+                            <td><span class="status-badge status-badge-info">Em trânsito</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#viewPurchaseModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>CP-2025004</td>
+                            <td>Mega Distribuidora</td>
+                            <td>01/04/2025</td>
+                            <td>R$ 1.310,00</td>
+                            <td>Boleto</td>
+                            <td><span class="status-badge status-badge-success">Recebido</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#viewPurchaseModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Inventory Page -->
+        <div class="page-container" id="inventory-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Estoque</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inventoryAdjustmentModal">
+                    <i class="fas fa-plus"></i> Ajuste de Estoque
+                </button>
+            </div>
+            
+            <div class="data-card">
+                <table id="inventoryTable" class="table table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Produto</th>
+                            <th>Qtde. Atual</th>
+                            <th>Qtde. Mínima</th>
+                            <th>Último Movimento</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>P001</td>
+                            <td>Smartphone XYZ</td>
+                            <td>2</td>
+                            <td>5</td>
+                            <td>15/04/2025</td>
+                            <td><span class="status-badge status-badge-danger">Estoque Baixo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#inventoryHistoryModal">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#inventoryAdjustmentModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>P002</td>
+                            <td>Notebook ABC</td>
+                            <td>3</td>
+                            <td>5</td>
+                            <td>12/04/2025</td>
+                            <td><span class="status-badge status-badge-danger">Estoque Baixo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#inventoryHistoryModal">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#inventoryAdjustmentModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>P003</td>
+                            <td>Tablet 123</td>
+                            <td>1</td>
+                            <td>5</td>
+                            <td>10/04/2025</td>
+                            <td><span class="status-badge status-badge-danger">Estoque Baixo</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#inventoryHistoryModal">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#inventoryAdjustmentModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>P004</td>
+                            <td>Smart TV 50"</td>
+                            <td>15</td>
+                            <td>5</td>
+                            <td>08/04/2025</td>
+                            <td><span class="status-badge status-badge-success">Em Estoque</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#inventoryHistoryModal">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#inventoryAdjustmentModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Reports Page -->
+        <div class="page-container" id="reports-page">
+            <h2 class="mb-4">Relatórios</h2>
+            
+            <div class="report-filters mb-4">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="reportType" class="form-label">Tipo de Relatório</label>
+                            <select class="form-select" id="reportType">
+                                <option value="sales">Resumo de Vendas</option>
+                                <option value="purchases">Resumo de Compras</option>
+                                <option value="profit">Lucro/Prejuízo</option>
+                                <option value="inventory">Estoque</option>
+                                <option value="customer">Clientes</option>
+                                <option value="supplier">Fornecedores</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="dateStart" class="form-label">Data Inicial</label>
+                            <input type="text" class="form-control datepicker" id="dateStart" placeholder="Selecione a data">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="dateEnd" class="form-label">Data Final</label>
+                            <input type="text" class="form-control datepicker" id="dateEnd" placeholder="Selecione a data">
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-group mb-3 w-100">
+                            <button class="btn btn-primary w-100" id="generateReportBtn">
+                                <i class="fas fa-file-alt me-2"></i> Gerar Relatório
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="data-card" id="reportContainer">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Resumo de Vendas</h4>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="fas fa-file-csv me-2"></i> Exportar CSV
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-file-pdf me-2"></i> Exportar PDF
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="report-summary mb-4">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Total de Vendas</h6>
+                                    <h4 class="card-title">R$ 25.450,00</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Qtde. de Vendas</h6>
+                                    <h4 class="card-title">28</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Ticket Médio</h6>
+                                    <h4 class="card-title">R$ 908,93</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Maior Venda</h6>
+                                    <h4 class="card-title">R$ 3.420,00</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nº Pedido</th>
+                                <th>Cliente</th>
+                                <th>Data</th>
+                                <th>Produtos</th>
+                                <th>Método Pgto.</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>VD-2025001</td>
+                                <td>Maria Silva</td>
+                                <td>15/04/2025</td>
+                                <td>3</td>
+                                <td>Cartão de Crédito</td>
+                                <td>R$ 1.450,00</td>
+                                <td><span class="status-badge status-badge-success">Concluído</span></td>
+                            </tr>
+                            <tr>
+                                <td>VD-2025002</td>
+                                <td>João Oliveira</td>
+                                <td>14/04/2025</td>
+                                <td>1</td>
+                                <td>Pix</td>
+                                <td>R$ 850,00</td>
+                                <td><span class="status-badge status-badge-warning">Pendente</span></td>
+                            </tr>
+                            <tr>
+                                <td>VD-2025003</td>
+                                <td>Ana Santos</td>
+                                <td>13/04/2025</td>
+                                <td>2</td>
+                                <td>Cartão de Crédito</td>
+                                <td>R$ 2.300,00</td>
+                                <td><span class="status-badge status-badge-success">Concluído</span></td>
+                            </tr>
+                            <tr>
+                                <td>VD-2025004</td>
+                                <td>Carlos Mendes</td>
+                                <td>12/04/2025</td>
+                                <td>1</td>
+                                <td>Boleto</td>
+                                <td>R$ 950,00</td>
+                                <td><span class="status-badge status-badge-info">Em entrega</span></td>
+                            </tr>
+                            <tr>
+                                <td>VD-2025005</td>
+                                <td>Paulo Rodrigues</td>
+                                <td>10/04/2025</td>
+                                <td>4</td>
+                                <td>Cartão de Crédito</td>
+                                <td>R$ 3.420,00</td>
+                                <td><span class="status-badge status-badge-success">Concluído</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <h5 class="mb-3">Vendas por Forma de Pagamento</h5>
+                            <canvas id="paymentMethodChart" height="250"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <h5 class="mb-3">Vendas por Dia</h5>
+                            <canvas id="salesByDayChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Page -->
+        <div class="page-container" id="settings-page">
+            <h2 class="mb-4">Configurações</h2>
+            
+            <div class="data-card">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                            <button class="nav-link active" id="v-pills-general-tab" data-bs-toggle="pill" data-bs-target="#v-pills-general" type="button" role="tab" aria-controls="v-pills-general" aria-selected="true">Geral</button>
+                            <button class="nav-link" id="v-pills-company-tab" data-bs-toggle="pill" data-bs-target="#v-pills-company" type="button" role="tab" aria-controls="v-pills-company" aria-selected="false">Empresa</button>
+                            <button class="nav-link" id="v-pills-users-tab" data-bs-toggle="pill" data-bs-target="#v-pills-users" type="button" role="tab" aria-controls="v-pills-users" aria-selected="false">Usuários</button>
+                            <button class="nav-link" id="v-pills-backup-tab" data-bs-toggle="pill" data-bs-target="#v-pills-backup" type="button" role="tab" aria-controls="v-pills-backup" aria-selected="false">Backup</button>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="tab-content" id="v-pills-tabContent">
+                            <div class="tab-pane fade show active" id="v-pills-general" role="tabpanel" aria-labelledby="v-pills-general-tab">
+                                <h4 class="mb-3">Configurações Gerais</h4>
+                                <form>
+                                    <div class="mb-3">
+                                        <label for="settingsCurrency" class="form-label">Moeda</label>
+                                        <select class="form-select" id="settingsCurrency">
+                                            <option value="BRL" selected>Real Brasileiro (R$)</option>
+                                            <option value="USD">Dólar Americano ($)</option>
+                                            <option value="EUR">Euro (€)</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="settingsDateFormat" class="form-label">Formato de Data</label>
+                                        <select class="form-select" id="settingsDateFormat">
+                                            <option value="DD/MM/YYYY" selected>DD/MM/AAAA</option>
+                                            <option value="MM/DD/YYYY">MM/DD/AAAA</option>
+                                            <option value="YYYY-MM-DD">AAAA-MM-DD</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="settingsTimeZone" class="form-label">Fuso Horário</label>
+                                        <select class="form-select" id="settingsTimeZone">
+                                            <option value="America/Sao_Paulo" selected>Horário de Brasília (GMT-3)</option>
+                                            <option value="America/New_York">New York (GMT-5)</option>
+                                            <option value="Europe/London">Londres (GMT+0)</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="settingsLowStockAlert" class="form-label">Alerta de Estoque Baixo</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">Quando menor que</span>
+                                            <input type="number" class="form-control" id="settingsLowStockAlert" value="5">
+                                            <span class="input-group-text">unidades</span>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Salvar Configurações</button>
+                                </form>
+                            </div>
+                            <div class="tab-pane fade" id="v-pills-company" role="tabpanel" aria-labelledby="v-pills-company-tab">
+                                <h4 class="mb-3">Informações da Empresa</h4>
+                                <form>
+                                    <div class="mb-3">
+                                        <label for="settingsCompanyName" class="form-label">Nome da Empresa</label>
+                                        <input type="text" class="form-control" id="settingsCompanyName" value="Minha Empresa Ltda">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="settingsCompanyDoc" class="form-label">CNPJ</label>
+                                        <input type="text" class="form-control" id="settingsCompanyDoc" value="12.345.678/0001-90">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="settingsCompanyAddress" class="form-label">Endereço</label>
+                                        <textarea class="form-control" id="settingsCompanyAddress" rows="3">Av. Paulista, 1000, São Paulo - SP, 01310-000</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="settingsCompanyEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="settingsCompanyEmail" value="contato@minhaempresa.com.br">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="settingsCompanyPhone" class="form-label">Telefone</label>
+                                        <input type="text" class="form-control" id="settingsCompanyPhone" value="(11) 3456-7890">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Salvar Informações</button>
+                                </form>
+                            </div>
+                            <div class="tab-pane fade" id="v-pills-users" role="tabpanel" aria-labelledby="v-pills-users-tab">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="mb-0">Gerenciar Usuários</h4>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+                                        <i class="fas fa-plus"></i> Novo Usuário
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Email</th>
+                                                <th>Função</th>
+                                                <th>Status</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Admin</td>
+                                                <td>admin@minhaempresa.com.br</td>
+                                                <td>Administrador</td>
+                                                <td><span class="status-badge status-badge-success">Ativo</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#userModal">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Vendedor</td>
+                                                <td>vendas@minhaempresa.com.br</td>
+                                                <td>Vendedor</td>
+                                                <td><span class="status-badge status-badge-success">Ativo</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#userModal">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Estoque</td>
+                                                <td>estoque@minhaempresa.com.br</td>
+                                                <td>Estoquista</td>
+                                                <td><span class="status-badge status-badge-secondary">Inativo</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#userModal">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="v-pills-backup" role="tabpanel" aria-labelledby="v-pills-backup-tab">
+                                <h4 class="mb-3">Backup do Sistema</h4>
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Backup Manual</h5>
+                                        <p class="card-text">Gere um backup completo de todos os dados do sistema.</p>
+                                        <button class="btn btn-primary">Gerar Backup Agora</button>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Backup Automático</h5>
+                                        <p class="card-text">Configure backups para serem gerados automaticamente.</p>
+                                        <div class="mb-3">
+                                            <label class="form-label">Frequência</label>
+                                            <select class="form-select">
+                                                <option value="daily" selected>Diário</option>
+                                                <option value="weekly">Semanal</option>
+                                                <option value="monthly">Mensal</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="autoBackupSwitch" checked>
+                                            <label class="form-check-label" for="autoBackupSwitch">Habilitar backup automático</label>
+                                        </div>
+                                        <button class="btn btn-primary">Salvar Configurações</button>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h5>Histórico de Backups</h5>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Tamanho</th>
+                                                <th>Tipo</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>15/04/2025 08:00</td>
+                                                <td>12.4 MB</td>
+                                                <td>Automático</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1">
+                                                        <i class="fas fa-download"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>14/04/2025 08:00</td>
+                                                <td>12.2 MB</td>
+                                                <td>Automático</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1">
+                                                        <i class="fas fa-download"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>13/04/2025 14:32</td>
+                                                <td>12.1 MB</td>
+                                                <td>Manual</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1">
+                                                        <i class="fas fa-download"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalLabel">Novo Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productCode" class="form-label">Código</label>
+                                    <input type="text" class="form-control" id="productCode" placeholder="Código do produto">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productBarcode" class="form-label">Código de Barras</label>
+                                    <input type="text" class="form-control" id="productBarcode" placeholder="Código de barras">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Nome do Produto</label>
+                            <input type="text" class="form-control" id="productName" placeholder="Nome do produto">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productCategory" class="form-label">Categoria</label>
+                                    <select class="form-select" id="productCategory">
+                                        <option value="">Selecione uma categoria</option>
+                                        <option value="electronics">Eletrônicos</option>
+                                        <option value="computers">Computadores</option>
+                                        <option value="phones">Smartphones</option>
+                                        <option value="accessories">Acessórios</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productSupplier" class="form-label">Fornecedor</label>
+                                    <select class="form-select" id="productSupplier">
+                                        <option value="">Selecione um fornecedor</option>
+                                        <option value="1">TechSolutions Ltda</option>
+                                        <option value="2">Eletrônicos Brasil S/A</option>
+                                        <option value="3">Import Tech</option>
+                                        <option value="4">Mega Distribuidora</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productCost" class="form-label">Preço de Custo</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="text" class="form-control" id="productCost" placeholder="0,00">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productPrice" class="form-label">Preço de Venda</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="text" class="form-control" id="productPrice" placeholder="0,00">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productStock" class="form-label">Estoque Atual</label>
+                                    <input type="number" class="form-control" id="productStock" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productMinStock" class="form-label">Estoque Mínimo</label>
+                                    <input type="number" class="form-control" id="productMinStock" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productDescription" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="productDescription" rows="3" placeholder="Descrição do produto"></textarea>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="productActive" checked>
+                            <label class="form-check-label" for="productActive">Produto Ativo</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveProductBtn">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer Modal -->
+    <div class="modal fade" id="customerModal" tabindex="-1" aria-labelledby="customerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customerModalLabel">Novo Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="customerForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customerType" class="form-label">Tipo</label>
+                                    <select class="form-select" id="customerType">
+                                        <option value="pf">Pessoa Física</option>
+                                        <option value="pj">Pessoa Jurídica</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customerDocument" class="form-label">CPF/CNPJ</label>
+                                    <input type="text" class="form-control" id="customerDocument" placeholder="Digite o CPF ou CNPJ">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="customerName" class="form-label">Nome/Razão Social</label>
+                                    <input type="text" class="form-control" id="customerName" placeholder="Nome completo ou razão social">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="customerBirthdate" class="form-label">Data de Nascimento</label>
+                                    <input type="text" class="form-control datepicker" id="customerBirthdate" placeholder="__/__/____">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customerEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="customerEmail" placeholder="Email">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customerPhone" class="form-label">Telefone</label>
+                                    <input type="text" class="form-control" id="customerPhone" placeholder="Telefone">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="customerZipcode" class="form-label">CEP</label>
+                                    <input type="text" class="form-control" id="customerZipcode" placeholder="CEP">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customerAddress" class="form-label">Endereço</label>
+                                    <input type="text" class="form-control" id="customerAddress" placeholder="Endereço">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="customerNumber" class="form-label">Número</label>
+                                    <input type="text" class="form-control" id="customerNumber" placeholder="Número">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="customerComplement" class="form-label">Complemento</label>
+                                    <input type="text" class="form-control" id="customerComplement" placeholder="Complemento">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="customerDistrict" class="form-label">Bairro</label>
+                                    <input type="text" class="form-control" id="customerDistrict" placeholder="Bairro">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="customerCity" class="form-label">Cidade</label>
+                                    <input type="text" class="form-control" id="customerCity" placeholder="Cidade">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customerState" class="form-label">Estado</label>
+                            <select class="form-select" id="customerState">
+                                <option value="">Selecione um estado</option>
+                                <option value="AC">Acre</option>
+                                <option value="AL">Alagoas</option>
+                                <option value="AP">Amapá</option>
+                                <option value="AM">Amazonas</option>
+                                <option value="BA">Bahia</option>
+                                <option value="CE">Ceará</option>
+                                <option value="DF">Distrito Federal</option>
+                                <option value="ES">Espírito Santo</option>
+                                <option value="GO">Goiás</option>
+                                <option value="MA">Maranhão</option>
+                                <option value="MT">Mato Grosso</option>
+                                <option value="MS">Mato Grosso do Sul</option>
+                                <option value="MG">Minas Gerais</option>
+                                <option value="PA">Pará</option>
+                                <option value="PB">Paraíba</option>
+                                <option value="PR">Paraná</option>
+                                <option value="PE">Pernambuco</option>
+                                <option value="PI">Piauí</option>
+                                <option value="RJ">Rio de Janeiro</option>
+                                <option value="RN">Rio Grande do Norte</option>
+                                <option value="RS">Rio Grande do Sul</option>
+                                <option value="RO">Rondônia</option>
+                                <option value="RR">Roraima</option>
+                                <option value="SC">Santa Catarina</option>
+                                <option value="SP">São Paulo</option>
+                                <option value="SE">Sergipe</option>
+                                <option value="TO">Tocantins</option>
+                            </select>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="customerActive" checked>
+                            <label class="form-check-label" for="customerActive">Cliente Ativo</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveCustomerBtn">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Supplier Modal -->
+    <div class="modal fade" id="supplierModal" tabindex="-1" aria-labelledby="supplierModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="supplierModalLabel">Novo Fornecedor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="supplierForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="supplierCNPJ" class="form-label">CNPJ</label>
+                                    <input type="text" class="form-control" id="supplierCNPJ" placeholder="CNPJ do fornecedor">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="supplierIE" class="form-label">Inscrição Estadual</label>
+                                    <input type="text" class="form-control" id="supplierIE" placeholder="Inscrição Estadual">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="supplierName" class="form-label">Razão Social</label>
+                            <input type="text" class="form-control" id="supplierName" placeholder="Razão Social">
+                        </div>
+                        <div class="mb-3">
+                            <label for="supplierFantasy" class="form-label">Nome Fantasia</label>
+                            <input type="text" class="form-control" id="supplierFantasy" placeholder="Nome Fantasia">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="supplierContact" class="form-label">Nome do Contato</label>
+                                    <input type="text" class="form-control" id="supplierContact" placeholder="Nome do contato">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="supplierPhone" class="form-label">Telefone</label>
+                                    <input type="text" class="form-control" id="supplierPhone" placeholder="Telefone">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="supplierEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="supplierEmail" placeholder="Email">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="supplierZipcode" class="form-label">CEP</label>
+                                    <input type="text" class="form-control" id="supplierZipcode" placeholder="CEP">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="supplierAddress" class="form-label">Endereço</label>
+                                    <input type="text" class="form-control" id="supplierAddress" placeholder="Endereço">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="supplierNumber" class="form-label">Número</label>
+                                    <input type="text" class="form-control" id="supplierNumber" placeholder="Número">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="supplierComplement" class="form-label">Complemento</label>
+                                    <input type="text" class="form-control" id="supplierComplement" placeholder="Complemento">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="supplierDistrict" class="form-label">Bairro</label>
+                                    <input type="text" class="form-control" id="supplierDistrict" placeholder="Bairro">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="supplierCity" class="form-label">Cidade</label>
+                                    <input type="text" class="form-control" id="supplierCity" placeholder="Cidade">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="supplierState" class="form-label">Estado</label>
+                            <select class="form-select" id="supplierState">
+                                <option value="">Selecione um estado</option>
+                                <option value="AC">Acre</option>
+                                <option value="AL">Alagoas</option>
+                                <option value="AP">Amapá</option>
+                                <option value="AM">Amazonas</option>
+                                <option value="BA">Bahia</option>
+                                <option value="CE">Ceará</option>
+                                <option value="DF">Distrito Federal</option>
+                                <option value="ES">Espírito Santo</option>
+                                <option value="GO">Goiás</option>
+                                <option value="MA">Maranhão</option>
+                                <option value="MT">Mato Grosso</option>
+                                <option value="MS">Mato Grosso do Sul</option>
+                                <option value="MG">Minas Gerais</option>
+                                <option value="PA">Pará</option>
+                                <option value="PB">Paraíba</option>
+                                <option value="PR">Paraná</option>
+                                <option value="PE">Pernambuco</option>
+                                <option value="PI">Piauí</option>
+                                <option value="RJ">Rio de Janeiro</option>
+                                <option value="RN">Rio Grande do Norte</option>
+                                <option value="RS">Rio Grande do Sul</option>
+                                <option value="RO">Rondônia</option>
+                                <option value="RR">Roraima</option>
+                                <option value="SC">Santa Catarina</option>
+                                <option value="SP">São Paulo</option>
+                                <option value="SE">Sergipe</option>
+                                <option value="TO">Tocantins</option>
+                            </select>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="supplierActive" checked>
+                            <label class="form-check-label" for="supplierActive">Fornecedor Ativo</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveSupplierBtn">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sale Modal -->
+    <div class="modal fade" id="saleModal" tabindex="-1" aria-labelledby="saleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="saleModalLabel">Nova Venda</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="saleForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="saleCustomer" class="form-label">Cliente</label>
+                                    <select class="form-select" id="saleCustomer">
+                                        <option value="">Selecione um cliente</option>
+                                        <option value="1">Maria Silva</option>
+                                        <option value="2">João Oliveira</option>
+                                        <option value="3">Ana Santos</option>
+                                        <option value="4">Carlos Mendes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="saleDate" class="form-label">Data</label>
+                                    <input type="text" class="form-control datepicker" id="saleDate" placeholder="__/__/____">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="saleStatus" class="form-label">Status</label>
+                                    <select class="form-select" id="saleStatus">
+                                        <option value="draft">Rascunho</option>
+                                        <option value="pending">Pendente</option>
+                                        <option value="completed">Concluída</option>
+                                        <option value="canceled">Cancelada</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mt-4 mb-3">Produtos</h6>
+                        <div class="table-responsive mb-3">
+                            <table class="table table-bordered" id="saleItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%">Produto</th>
+                                        <th style="width: 15%">Preço</th>
+                                        <th style="width: 15%">Quantidade</th>
+                                        <th style="width: 15%">Desconto</th>
+                                        <th style="width: 15%">Total</th>
+                                        <th style="width: 10%">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <select class="form-select product-select">
+                                                <option value="">Selecione um produto</option>
+                                                <option value="1">Smartphone XYZ</option>
+                                                <option value="2">Notebook ABC</option>
+                                                <option value="3">Tablet 123</option>
+                                                <option value="4">Smart TV 50"</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-text">R$</span>
+                                                <input type="text" class="form-control product-price" value="1.999,00" readonly>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control product-quantity" value="1" min="1">
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control product-discount" value="0,00">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-text">R$</span>
+                                                <input type="text" class="form-control product-total" value="1.999,00" readonly>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger remove-item">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mb-4">
+                            <button type="button" class="btn btn-secondary" id="addProductRowBtn">
+                                <i class="fas fa-plus me-2"></i>Adicionar Produto
+                            </button>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="saleObservations" class="form-label">Observações</label>
+                                    <textarea class="form-control" id="saleObservations" rows="4" placeholder="Observações"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Subtotal:</span>
+                                            <span id="saleSubtotal">R$ 1.999,00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Desconto:</span>
+                                            <span id="saleDiscount">R$ 0,00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span>Frete:</span>
+                                            <div class="input-group input-group-sm" style="width: 150px">
+                                                <span class="input-group-text">R$</span>
+                                                <input type="text" class="form-control" id="saleShipping" value="0,00">
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold">Total:</span>
+                                            <span class="fw-bold" id="saleTotal">R$ 1.999,00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <label for="salePaymentMethod" class="form-label">Forma de Pagamento</label>
+                                    <select class="form-select" id="salePaymentMethod">
+                                        <option value="cash">Dinheiro</option>
+                                        <option value="credit_card">Cartão de Crédito</option>
+                                        <option value="debit_card">Cartão de Débito</option>
+                                        <option value="pix">Pix</option>
+                                        <option value="bank_slip">Boleto</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveSaleBtn">Finalizar Venda</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Sale Modal -->
+    <div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="viewSaleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewSaleModalLabel">Detalhes da Venda</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Número do Pedido:</strong> VD-2025001</p>
+                            <p><strong>Cliente:</strong> Maria Silva</p>
+                            <p><strong>Data:</strong> 15/04/2025</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> <span class="status-badge status-badge-success">Concluído</span></p>
+                            <p><strong>Forma de Pagamento:</strong> Cartão de Crédito</p>
+                            <p><strong>Total:</strong> R$ 1.450,00</p>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mb-3">Itens do Pedido</h6>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Preço Unit.</th>
+                                    <th>Qtde</th>
+                                    <th>Desconto</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Smartphone XYZ</td>
+                                    <td>R$ 1.999,00</td>
+                                    <td>1</td>
+                                    <td>5%</td>
+                                    <td>R$ 1.899,05</td>
+                                </tr>
+                                <tr>
+                                    <td>Fone de Ouvido Bluetooth</td>
+                                    <td>R$ 299,00</td>
+                                    <td>1</td>
+                                    <td>0%</td>
+                                    <td>R$ 299,00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6>Observações</h6>
+                                <p>Cliente solicitou entrega em horário comercial.</p>
+                            </div>
+                            <div>
+                                <h6>Endereço de Entrega</h6>
+                                <p>
+                                    Av. Paulista, 1000, apto 123<br>
+                                    Bela Vista - São Paulo/SP<br>
+                                    CEP: 01310-000
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Resumo da Venda</h6>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span>R$ 2.298,00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Desconto Total:</span>
+                                        <span>R$ 99,95</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Frete:</span>
+                                        <span>R$ 50,00</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold">Total:</span>
+                                        <span class="fw-bold">R$ 2.248,05</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary">
+                        <i class="fas fa-print me-2"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Purchase Modal -->
+    <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="purchaseModalLabel">Nova Compra</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="purchaseForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="purchaseSupplier" class="form-label">Fornecedor</label>
+                                    <select class="form-select" id="purchaseSupplier">
+                                        <option value="">Selecione um fornecedor</option>
+                                        <option value="1">TechSolutions Ltda</option>
+                                        <option value="2">Eletrônicos Brasil S/A</option>
+                                        <option value="3">Import Tech</option>
+                                        <option value="4">Mega Distribuidora</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="purchaseDate" class="form-label">Data</label>
+                                    <input type="text" class="form-control datepicker" id="purchaseDate" placeholder="__/__/____">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="purchaseStatus" class="form-label">Status</label>
+                                    <select class="form-select" id="purchaseStatus">
+                                        <option value="draft">Rascunho</option>
+                                        <option value="pending">Pendente</option>
+                                        <option value="received">Recebido</option>
+                                        <option value="canceled">Cancelado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mt-4 mb-3">Produtos</h6>
+                        <div class="table-responsive mb-3">
+                            <table class="table table-bordered" id="purchaseItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%">Produto</th>
+                                        <th style="width: 15%">Preço de Custo</th>
+                                        <th style="width: 15%">Quantidade</th>
+                                        <th style="width: 15%">Total</th>
+                                        <th style="width: 10%">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <select class="form-select product-select">
+                                                <option value="">Selecione um produto</option>
+                                                <option value="1">Smartphone XYZ</option>
+                                                <option value="2">Notebook ABC</option>
+                                                <option value="3">Tablet 123</option>
+                                                <option value="4">Smart TV 50"</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-text">R$</span>
+                                                <input type="text" class="form-control product-cost" value="1.500,00">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control product-quantity" value="5" min="1">
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-text">R$</span>
+                                                <input type="text" class="form-control product-total" value="7.500,00" readonly>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger remove-item">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mb-4">
+                            <button type="button" class="btn btn-secondary" id="addPurchaseRowBtn">
+                                <i class="fas fa-plus me-2"></i>Adicionar Produto
+                            </button>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="purchaseNotes" class="form-label">Observações</label>
+                                    <textarea class="form-control" id="purchaseNotes" rows="4" placeholder="Observações"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="purchaseInvoice" class="form-label">Nota Fiscal</label>
+                                    <input type="text" class="form-control" id="purchaseInvoice" placeholder="Número da nota fiscal">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Subtotal:</span>
+                                            <span id="purchaseSubtotal">R$ 7.500,00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span>Frete:</span>
+                                            <div class="input-group input-group-sm" style="width: 150px">
+                                                <span class="input-group-text">R$</span>
+                                                <input type="text" class="form-control" id="purchaseShipping" value="950,00">
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span>Impostos:</span>
+                                            <div class="input-group input-group-sm" style="width: 150px">
+                                                <span class="input-group-text">R$</span>
+                                                <input type="text" class="form-control" id="purchaseTax" value="0,00">
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold">Total:</span>
+                                            <span class="fw-bold" id="purchaseTotal">R$ 8.450,00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <label for="purchasePaymentMethod" class="form-label">Forma de Pagamento</label>
+                                    <select class="form-select" id="purchasePaymentMethod">
+                                        <option value="cash">Dinheiro</option>
+                                        <option value="credit_card">Cartão de Crédito</option>
+                                        <option value="bank_transfer" selected>Transferência Bancária</option>
+                                        <option value="bank_slip">Boleto</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="savePurchaseBtn">Finalizar Compra</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Purchase Modal -->
+    <div class="modal fade" id="viewPurchaseModal" tabindex="-1" aria-labelledby="viewPurchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewPurchaseModalLabel">Detalhes da Compra</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Número do Pedido:</strong> CP-2025001</p>
+                            <p><strong>Fornecedor:</strong> TechSolutions Ltda</p>
+                            <p><strong>Data:</strong> 10/04/2025</p>
+                            <p><strong>Nota Fiscal:</strong> NF-e 123456789</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> <span class="status-badge status-badge-success">Recebido</span></p>
+                            <p><strong>Forma de Pagamento:</strong> Transferência</p>
+                            <p><strong>Total:</strong> R$ 8.450,00</p>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mb-3">Itens do Pedido</h6>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Preço de Custo</th>
+                                    <th>Qtde</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Smartphone XYZ</td>
+                                    <td>R$ 1.500,00</td>
+                                    <td>5</td>
+                                    <td>R$ 7.500,00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6>Observações</h6>
+                                <p>Produtos recebidos em perfeito estado no dia 12/04/2025.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Resumo da Compra</h6>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span>R$ 7.500,00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Frete:</span>
+                                        <span>R$ 950,00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Impostos:</span>
+                                        <span>R$ 0,00</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold">Total:</span>
+                                        <span class="fw-bold">R$ 8.450,00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary">
+                        <i class="fas fa-print me-2"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory Adjustment Modal -->
+    <div class="modal fade" id="inventoryAdjustmentModal" tabindex="-1" aria-labelledby="inventoryAdjustmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inventoryAdjustmentModalLabel">Ajuste de Estoque</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="inventoryAdjustmentForm">
+                        <div class="mb-3">
+                            <label for="adjustmentProduct" class="form-label">Produto</label>
+                            <select class="form-select" id="adjustmentProduct">
+                                <option value="">Selecione um produto</option>
+                                <option value="1">Smartphone XYZ</option>
+                                <option value="2">Notebook ABC</option>
+                                <option value="3">Tablet 123</option>
+                                <option value="4">Smart TV 50"</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="adjustmentCurrentStock" class="form-label">Estoque Atual</label>
+                                    <input type="number" class="form-control" id="adjustmentCurrentStock" value="2" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="adjustmentNewStock" class="form-label">Novo Estoque</label>
+                                    <input type="number" class="form-control" id="adjustmentNewStock" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="adjustmentType" class="form-label">Tipo de Ajuste</label>
+                            <select class="form-select" id="adjustmentType">
+                                <option value="addition">Entrada</option>
+                                <option value="subtraction">Saída</option>
+                                <option value="count">Contagem</option>
+                                <option value="loss">Perda/Avaria</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="adjustmentReason" class="form-label">Motivo do Ajuste</label>
+                            <textarea class="form-control" id="adjustmentReason" rows="3" placeholder="Descreva o motivo do ajuste"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveAdjustmentBtn">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory History Modal -->
+    <div class="modal fade" id="inventoryHistoryModal" tabindex="-1" aria-labelledby="inventoryHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inventoryHistoryModalLabel">Histórico de Movimentações - Smartphone XYZ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Quantidade</th>
+                                    <th>Estoque Anterior</th>
+                                    <th>Estoque Final</th>
+                                    <th>Referência</th>
+                                    <th>Observação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>15/04/2025</td>
+                                    <td>Venda</td>
+                                    <td class="text-danger">-1</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>VD-2025001</td>
+                                    <td>Venda para Maria Silva</td>
+                                </tr>
+                                <tr>
+                                    <td>12/04/2025</td>
+                                    <td>Compra</td>
+                                    <td class="text-success">+5</td>
+                                    <td>0</td>
+                                    <td>5</td>
+                                    <td>CP-2025001</td>
+                                    <td>Compra de TechSolutions Ltda</td>
+                                </tr>
+                                <tr>
+                                    <td>13/04/2025</td>
+                                    <td>Venda</td>
+                                    <td class="text-danger">-1</td>
+                                    <td>5</td>
+                                    <td>4</td>
+                                    <td>VD-2025003</td>
+                                    <td>Venda para Ana Santos</td>
+                                </tr>
+                                <tr>
+                                    <td>14/04/2025</td>
+                                    <td>Ajuste</td>
+                                    <td class="text-danger">-1</td>
+                                    <td>4</td>
+                                    <td>3</td>
+                                    <td>AJ-2025001</td>
+                                    <td>Produto defeituoso retornado pelo cliente</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary">
+                        <i class="fas fa-print me-2"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">Novo Usuário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <div class="mb-3">
+                            <label for="userName" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="userName" placeholder="Nome completo">
+                        </div>
+                        <div class="mb-3">
+                            <label for="userEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="userEmail" placeholder="Email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="userRole" class="form-label">Função</label>
+                            <select class="form-select" id="userRole">
+                                <option value="admin">Administrador</option>
+                                <option value="manager">Gerente</option>
+                                <option value="sales">Vendedor</option>
+                                <option value="inventory">Estoquista</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userPassword" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="userPassword" placeholder="Senha">
+                        </div>
+                        <div class="mb-3">
+                            <label for="userPasswordConfirm" class="form-label">Confirmar Senha</label>
+                            <input type="password" class="form-control" id="userPasswordConfirm" placeholder="Confirmar senha">
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="userActive" checked>
+                            <label class="form-check-label" for="userActive">Usuário Ativo</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveUserBtn">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+    <script id="app-script">
+        // App Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize sidebar and navigation
+            initSidebar();
+            
+            // Initialize datatables
+            initDataTables();
+            
+            // Initialize date pickers
+            initDatepickers();
+            
+            // Initialize charts
+            initCharts();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Hide loading spinner
+            setTimeout(() => {
+                document.querySelector('.loading').classList.remove('active');
+            }, 500);
+        });
+        
+        function initSidebar() {
+            // Toggle sidebar
+            document.getElementById('toggle-sidebar').addEventListener('click', function() {
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('main-content');
+                
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('expanded');
+                
+                // For mobile
+                if (window.innerWidth < 992) {
+                    sidebar.classList.toggle('show');
+                }
+            });
+            
+            // Navigation between pages
+            const navItems = document.querySelectorAll('.sidebar-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Update active class
+                    navItems.forEach(ni => ni.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show selected page
+                    const pageId = this.getAttribute('data-page') + '-page';
+                    const pages = document.querySelectorAll('.page-container');
+                    pages.forEach(page => page.classList.remove('active'));
+                    document.getElementById(pageId).classList.add('active');
+                    
+                    // Close sidebar on mobile
+                    if (window.innerWidth < 992) {
+                        document.getElementById('sidebar').classList.remove('show');
+                    }
+                });
+            });
+        }
+        
+        function initDataTables() {
+            const tables = [
+                '#productsTable', 
+                '#customersTable', 
+                '#suppliersTable', 
+                '#salesTable', 
+                '#purchasesTable', 
+                '#inventoryTable'
+            ];
+            
+            tables.forEach(tableId => {
+                if (document.querySelector(tableId)) {
+                    $(tableId).DataTable({
+                        responsive: true,
+                        language: {
+                            search: "Buscar:",
+                            lengthMenu: "Mostrar _MENU_ registros por página",
+                            info: "Mostrando _START_ até _END_ de _TOTAL_ registros",
+                            infoEmpty: "Mostrando 0 até 0 de 0 registros",
+                            infoFiltered: "(filtrado de _MAX_ registros no total)",
+                            zeroRecords: "Nenhum registro encontrado",
+                            paginate: {
+                                first: "Primeiro",
+                                last: "Último",
+                                next: "Próximo",
+                                previous: "Anterior"
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        
+        function initDatepickers() {
+            const datepickers = document.querySelectorAll('.datepicker');
+            datepickers.forEach(picker => {
+                flatpickr(picker, {
+                    dateFormat: "d/m/Y",
+                    locale: {
+                        firstDayOfWeek: 0,
+                        weekdays: {
+                            shorthand: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+                            longhand: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+                        },
+                        months: {
+                            shorthand: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                            longhand: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+                        }
+                    }
+                });
+            });
+        }
+        
+        function initCharts() {
+            // Sales vs Purchases Chart
+            if (document.getElementById('salesVsPurchasesChart')) {
+                const ctx = document.getElementById('salesVsPurchasesChart').getContext('2d');
+                const salesVsPurchasesChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                        datasets: [
+                            {
+                                label: 'Vendas',
+                                data: [12000, 15000, 18000, 25450, 22000, 30000, 35000, 40000, 35000, 38000, 40000, 45000],
+                                borderColor: '#22c55e',
+                                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Compras',
+                                data: [10000, 12000, 15000, 18230, 16000, 20000, 25000, 30000, 28000, 25000, 30000, 32000],
+                                borderColor: '#eab308',
+                                backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Mês'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Valor (R$)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Sales by Category Chart
+            if (document.getElementById('salesByCategoryChart')) {
+                const ctx = document.getElementById('salesByCategoryChart').getContext('2d');
+                const salesByCategoryChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Smartphones', 'Notebooks', 'Tablets', 'Smart TVs', 'Acessórios'],
+                        datasets: [{
+                            data: [12000, 8000, 5000, 7000, 3000],
+                            backgroundColor: [
+                                '#2563eb',
+                                '#22c55e',
+                                '#eab308',
+                                '#ef4444',
+                                '#0ea5e9'
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Top Customers Chart
+            if (document.getElementById('topCustomersChart')) {
+                const ctx = document.getElementById('topCustomersChart').getContext('2d');
+                const topCustomersChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Maria Silva', 'João Oliveira', 'Ana Santos', 'Carlos Mendes', 'Paulo Rodrigues'],
+                        datasets: [{
+                            label: 'Total de Compras',
+                            data: [5000, 4200, 3800, 3500, 3200],
+                            backgroundColor: '#2563eb',
+                            borderColor: '#1d4ed8',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.x !== null) {
+                                            label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.x);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    callback: function(value) {
+                                        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Payment Method Chart
+            if (document.getElementById('paymentMethodChart')) {
+                const ctx = document.getElementById('paymentMethodChart').getContext('2d');
+                const paymentMethodChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Cartão de Crédito', 'Pix', 'Boleto', 'Dinheiro', 'Cartão de Débito'],
+                        datasets: [{
+                            data: [12000, 8000, 3000, 1500, 4500],
+                            backgroundColor: [
+                                '#2563eb',
+                                '#22c55e',
+                                '#eab308',
+                                '#ef4444',
+                                '#0ea5e9'
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Sales by Day Chart
+            if (document.getElementById('salesByDayChart')) {
+                const ctx = document.getElementById('salesByDayChart').getContext('2d');
+                const salesByDayChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['10/04', '11/04', '12/04', '13/04', '14/04', '15/04', '16/04'],
+                        datasets: [{
+                            label: 'Vendas por Dia',
+                            data: [3420, 1850, 950, 2300, 850, 1450, 2500],
+                            backgroundColor: '#2563eb',
+                            borderColor: '#1d4ed8',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function setupEventListeners() {
+            // Generate Report Button
+            const generateReportBtn = document.getElementById('generateReportBtn');
+            if (generateReportBtn) {
+                generateReportBtn.addEventListener('click', function() {
+                    // Show loading
+                    document.querySelector('.loading').classList.add('active');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Hide loading
+                        document.querySelector('.loading').classList.remove('active');
+                        
+                        // Show toast
+                        showToast('Relatório gerado com sucesso!', 'success');
+                    }, 1000);
+                });
+            }
+            
+            // Save Product Button
+            const saveProductBtn = document.getElementById('saveProductBtn');
+            if (saveProductBtn) {
+                saveProductBtn.addEventListener('click', function() {
+                    // Show loading
+                    document.querySelector('.loading').classList.add('active');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Hide loading and modal
+                        document.querySelector('.loading').classList.remove('active');
+                        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+                        
+                        // Show toast
+                        showToast('Produto salvo com sucesso!', 'success');
+                    }, 1000);
+                });
+            }
+            
+            // Save Customer Button
+            const saveCustomerBtn = document.getElementById('saveCustomerBtn');
+            if (saveCustomerBtn) {
+                saveCustomerBtn.addEventListener('click', function() {
+                    // Show loading
+                    document.querySelector('.loading').classList.add('active');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Hide loading and modal
+                        document.querySelector('.loading').classList.remove('active');
+                        bootstrap.Modal.getInstance(document.getElementById('customerModal')).hide();
+                        
+                        // Show toast
+                        showToast('Cliente salvo com sucesso!', 'success');
+                    }, 1000);
+                });
+            }
+            
+            // Save Supplier Button
+            const saveSupplierBtn = document.getElementById('saveSupplierBtn');
+            if (saveSupplierBtn) {
+                saveSupplierBtn.addEventListener('click', function() {
+                    // Show loading
+                    document.querySelector('.loading').classList.add('active');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Hide loading and modal
+                        document.querySelector('.loading').classList.remove('active');
+                        bootstrap.Modal.getInstance(document.getElementById('supplierModal')).hide();
+                        
+                        // Show toast
+                        showToast('Fornecedor salvo com sucesso!', 'success');
+                    }, 1000);
+                });
+            }
+            
+            // Save Sale Button
+            const saveSaleBtn = document.getElementById('saveSaleBtn');
+            if (saveSaleBtn) {
+                saveSaleBtn.addEventListener('click', function() {
+                    // Show loading
+                    document.querySelector('.loading').classList.add('active');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Hide loading and modal
+                        document.querySelector('.loading').classList.remove('active');
+                        bootstrap.Modal.getInstance(document.getElementById('saleModal')).hide();
+                        
+                        // Show toast
+                        showToast('Venda finalizada com sucesso!', 'success');
+                    }, 1000);
+                });
+            }
+            
+            // Save Purchase Button
+            const savePurchaseBtn = document.getElementById('savePurchaseBtn');
+            if (savePurchaseBtn) {
+                savePurchaseBtn.addEventListener('click', function() {
+                    // Show loading
+                    document.querySelector('.loading').classList.add('active');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Hide loading and modal
+                        document.querySelector('.loading').classList.remove('active');
+                        bootstrap.Modal.getInstance(document.getElementById('purchaseModal')).hide();
+                        
+                        // Show toast
+                        showToast('Compra finalizada com sucesso!', 'success');
+                    }, 1000);
+                });
+            }
+            
+            // Save Inventory Adjustment Button
+            const saveAdjustmentBtn = document.getElementById('saveAdjustmentBtn');
+            if (saveAdjustmentBtn) {
+                saveAdjustmentBtn.addEventListener('click', function() {
+                    // Show loading
+                    document.querySelector('.loading').classList.add('active');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Hide loading and modal
+                        document.querySelector('.loading').classList.remove('active');
+                        bootstrap.Modal.getInstance(document.getElementById('inventoryAdjustmentModal')).hide();
+                        
+                        // Show toast
+                        showToast('Ajuste de estoque realizado com sucesso!', 'success');
+                    }, 1000);
+                });
+            }
+            
+            // Save User Button
+            const saveUserBtn = document.getElementById('saveUserBtn');
+            if (saveUserBtn) {
+                saveUserBtn.addEventListener('click', function() {
+                    // Show loading
+                    document.querySelector('.loading').classList.add('active');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Hide loading and modal
+                        document.querySelector('.loading').classList.remove('active');
+                        bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+                        
+                        // Show toast
+                        showToast('Usuário salvo com sucesso!', 'success');
+                    }, 1000);
+                });
+            }
+            
+            // Delete buttons
+            const deleteButtons = document.querySelectorAll('.btn-outline-danger');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                    deleteModal.show();
+                });
+            });
+            
+            // Confirm Delete Button
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.addEventListener('click', function() {
+                    // Show loading
+                    document.querySelector('.loading').classList.add('active');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Hide loading and modal
+                        document.querySelector('.loading').classList.remove('active');
+                        bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+                        
+                        // Show toast
+                        showToast('Item excluído com sucesso!', 'success');
+                    }, 1000);
+                });
+            }
+            
+            // Add Product Row in Sale Modal
+            const addProductRowBtn = document.getElementById('addProductRowBtn');
+            if (addProductRowBtn) {
+                addProductRowBtn.addEventListener('click', function() {
+                    const tbody = document.querySelector('#saleItemsTable tbody');
+                    const newRow = tbody.rows[0].cloneNode(true);
+                    
+                    // Clear values in the new row
+                    newRow.querySelector('.product-select').value = '';
+                    newRow.querySelector('.product-price').value = '0,00';
+                    newRow.querySelector('.product-quantity').value = '1';
+                    newRow.querySelector('.product-discount').value = '0,00';
+                    newRow.querySelector('.product-total').value = '0,00';
+                    
+                    tbody.appendChild(newRow);
+                    
+                    // Add event listener to remove button
+                    newRow.querySelector('.remove-item').addEventListener('click', function() {
+                        tbody.removeChild(newRow);
+                    });
+                });
+            }
+            
+            // Add Product Row in Purchase Modal
+            const addPurchaseRowBtn = document.getElementById('addPurchaseRowBtn');
+            if (addPurchaseRowBtn) {
+                addPurchaseRowBtn.addEventListener('click', function() {
+                    const tbody = document.querySelector('#purchaseItemsTable tbody');
+                    const newRow = tbody.rows[0].cloneNode(true);
+                    
+                    // Clear values in the new row
+                    newRow.querySelector('.product-select').value = '';
+                    newRow.querySelector('.product-cost').value = '0,00';
+                    newRow.querySelector('.product-quantity').value = '1';
+                    newRow.querySelector('.product-total').value = '0,00';
+                    
+                    tbody.appendChild(newRow);
+                    
+                    // Add event listener to remove button
+                    newRow.querySelector('.remove-item').addEventListener('click', function() {
+                        tbody.removeChild(newRow);
+                    });
+                });
+            }
+            
+            // Handle remove item buttons
+            const removeItemBtns = document.querySelectorAll('.remove-item');
+            removeItemBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const tbody = row.parentElement;
+                    
+                    // Don't remove the last row
+                    if (tbody.rows.length > 1) {
+                        tbody.removeChild(row);
+                    } else {
+                        // Just clear the values
+                        row.querySelector('.product-select').value = '';
+                        row.querySelector('.product-price') && (row.querySelector('.product-price').value = '0,00');
+                        row.querySelector('.product-cost') && (row.querySelector('.product-cost').value = '0,00');
+                        row.querySelector('.product-quantity').value = '1';
+                        row.querySelector('.product-discount') && (row.querySelector('.product-discount').value = '0,00');
+                        row.querySelector('.product-total').value = '0,00';
+                    }
+                });
+            });
+        }
+        
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast show';
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            let iconClass = 'fa-info-circle text-info';
+            if (type === 'success') {
+                iconClass = 'fa-check-circle text-success';
+            } else if (type === 'warning') {
+                iconClass = 'fa-exclamation-triangle text-warning';
+            } else if (type === 'danger') {
+                iconClass = 'fa-exclamation-circle text-danger';
+            }
+            
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <i class="fas ${iconClass} me-2"></i>
+                    <strong class="me-auto">Notificação</strong>
+                    <small>Agora</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toastContainer.removeChild(toast);
+                }, 500);
+            }, 5000);
+            
+            // Handle manual close
+            toast.querySelector('.btn-close').addEventListener('click', function() {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toastContainer.removeChild(toast);
+                }, 500);
+            });
+        }
+    </script>
+</body>
+</html>
