@@ -181,6 +181,10 @@
         });
         
         function loadDashboardCharts() {
+            // Skip chart loading for now - no API endpoint available
+            console.log('Charts disabled - database not configured');
+            return;
+            
             fetch('/api/dashboard/charts')
                 .then(response => response.json())
                 .then(data => {
