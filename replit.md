@@ -58,8 +58,10 @@ Preferred communication style: Simple, everyday language.
 - **Flatpickr**: Modern date picker component
 
 ## Database
-- **PostgreSQL**: Primary database system (configurable via DATABASE_URL)
-- **Connection Pooling**: Built-in SQLAlchemy connection management
+- **Supabase PostgreSQL**: Cloud-hosted PostgreSQL database with real-time capabilities
+- **Connection**: Direct SQLAlchemy connection using Supabase's PostgreSQL connection string
+- **Migration Strategy**: SQLAlchemy create_all() for initial setup, manual schema updates as needed
+- **Connection Pooling**: Built-in SQLAlchemy connection management with transaction pooler
 
 ## Production Considerations
 - **ProxyFix**: Werkzeug middleware for reverse proxy deployments

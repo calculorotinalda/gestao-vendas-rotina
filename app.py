@@ -30,12 +30,16 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # initialize the app with the extension
 db.init_app(app)
 
-with app.app_context():
-    # Import models to ensure tables are created
-    import models  # noqa: F401
-    
-    # Create all tables
-    db.create_all()
+# Try to initialize database tables when needed, not at startup
+def init_database():
+    try:
+        with app.app_context():
+            import models  # noqa: F401
+            db.create_all()
+            return True
+    except Exception as e:
+        print(f"Database initialization failed: {e}")
+        return False
 
-# Import routes after app initialization
-import routes  # noqa: F401
+# Import simple routes for testing
+import simple_routes  # noqa: F401

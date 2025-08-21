@@ -7,41 +7,45 @@ from sqlalchemy import func, desc, asc
 from datetime import datetime, timedelta
 import logging
 
-# Initialize default user and configurations
-with app.app_context():
-    # Create default admin user if it doesn't exist
-    admin_user = User.query.filter_by(username='admin').first()
-    if not admin_user:
-        admin_user = User(
-            username='admin',
-            email='admin@gestvendas.com',
-            full_name='Administrador',
-            role='admin'
-        )
-        admin_user.set_password('admin123')
-        db.session.add(admin_user)
-        
-    # Create default configurations
-    default_configs = [
-        {'key': 'currency', 'value': 'EUR', 'description': 'Moeda padrão do sistema'},
-        {'key': 'currency_symbol', 'value': '€', 'description': 'Símbolo da moeda'},
-        {'key': 'tax_rate', 'value': '23.00', 'description': 'Taxa de IVA padrão (%)', 'data_type': 'decimal'},
-        {'key': 'company_name', 'value': 'GestVendas', 'description': 'Nome da empresa'},
-        {'key': 'company_address', 'value': '', 'description': 'Endereço da empresa'},
-        {'key': 'company_tax_number', 'value': '', 'description': 'Número fiscal da empresa'},
-    ]
-    
-    for config_data in default_configs:
-        existing_config = Configuration.query.filter_by(key=config_data['key']).first()
-        if not existing_config:
-            config = Configuration(**config_data)
-            db.session.add(config)
-    
+# Initialize default user and configurations when database is available
+def initialize_default_data():
     try:
-        db.session.commit()
+        with app.app_context():
+            # Create default admin user if it doesn't exist
+            admin_user = User.query.filter_by(username='admin').first()
+            if not admin_user:
+                admin_user = User(
+                    username='admin',
+                    email='admin@gestvendas.com',
+                    full_name='Administrador',
+                    role='admin'
+                )
+                admin_user.set_password('admin123')
+                db.session.add(admin_user)
+                
+            # Create default configurations
+            default_configs = [
+                {'key': 'currency', 'value': 'EUR', 'description': 'Moeda padrão do sistema'},
+                {'key': 'currency_symbol', 'value': '€', 'description': 'Símbolo da moeda'},
+                {'key': 'tax_rate', 'value': '23.00', 'description': 'Taxa de IVA padrão (%)', 'data_type': 'decimal'},
+                {'key': 'company_name', 'value': 'GestVendas', 'description': 'Nome da empresa'},
+                {'key': 'company_address', 'value': '', 'description': 'Endereço da empresa'},
+                {'key': 'company_tax_number', 'value': '', 'description': 'Número fiscal da empresa'},
+            ]
+            
+            for config_data in default_configs:
+                existing_config = Configuration.query.filter_by(key=config_data['key']).first()
+                if not existing_config:
+                    config = Configuration(**config_data)
+                    db.session.add(config)
+            
+            db.session.commit()
+            return True
     except Exception as e:
         logging.error(f"Error creating default data: {e}")
-        db.session.rollback()
+        if 'session' in locals():
+            db.session.rollback()
+        return False
 
 # Helper function to check if user is logged in
 def login_required():
