@@ -41,5 +41,6 @@ def init_database():
         print(f"Database initialization failed: {e}")
         return False
 
-# Import simple routes for testing
+# Import routes
 import simple_routes  # noqa: F401
+# import routes  # noqa: F401  # Temporarily disabled due to conflicts
