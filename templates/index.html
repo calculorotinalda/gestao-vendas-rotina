@@ -74,14 +74,26 @@
                                 <button type="button" class="btn btn-outline-primary btn-sm">3 Meses</button>
                             </div>
                         </div>
-                        <canvas id="salesChart" height="300"></canvas>
+                        <div class="text-center py-5 text-muted" style="height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+                            <div>
+                                <i class="fas fa-chart-line fa-3x mb-3 opacity-50"></i>
+                                <p>Gráfico de vendas será exibido aqui</p>
+                                <small>Configure produtos e registre vendas para visualizar dados</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="col-xl-4">
                     <div class="chart-container">
                         <h5><i class="fas fa-chart-pie me-2"></i>Top Produtos</h5>
-                        <canvas id="productsChart" height="300"></canvas>
+                        <div class="text-center py-5 text-muted" style="height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+                            <div>
+                                <i class="fas fa-chart-pie fa-3x mb-3 opacity-50"></i>
+                                <p>Gráfico de produtos será exibido aqui</p>
+                                <small>Dados aparecerão após primeiras vendas</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -181,93 +193,8 @@
         });
         
         function loadDashboardCharts() {
-            // Skip chart loading for now - no API endpoint available
-            console.log('Charts disabled - database not configured');
-            return;
-            
-            fetch('/api/dashboard/charts')
-                .then(response => response.json())
-                .then(data => {
-                    // Sales Chart
-                    const salesCtx = document.getElementById('salesChart').getContext('2d');
-                    new Chart(salesCtx, {
-                        type: 'line',
-                        data: {
-                            labels: data.sales.labels,
-                            datasets: [{
-                                label: 'Vendas (€)',
-                                data: data.sales.data,
-                                borderColor: '#2563eb',
-                                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                                tension: 0.4,
-                                fill: true
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        callback: function(value) {
-                                            return new Intl.NumberFormat('pt-PT', {
-                                                style: 'currency',
-                                                currency: 'EUR'
-                                            }).format(value);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    
-                    // Products Chart
-                    const productsCtx = document.getElementById('productsChart').getContext('2d');
-                    new Chart(productsCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: data.products.labels,
-                            datasets: [{
-                                data: data.products.revenues,
-                                backgroundColor: [
-                                    '#2563eb',
-                                    '#22c55e',
-                                    '#eab308',
-                                    '#ef4444',
-                                    '#0ea5e9'
-                                ]
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return context.label + ': ' + new Intl.NumberFormat('pt-PT', {
-                                                style: 'currency',
-                                                currency: 'EUR'
-                                            }).format(context.raw);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading dashboard charts:', error);
-                });
+            // Charts disabled - will be implemented when chart API is available
+            console.log('Charts disabled - using static dashboard');
         }
     </script>
 {% endblock %}
