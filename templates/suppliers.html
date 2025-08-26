@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Clientes - GestVendas{% endblock %}
+{% block title %}Fornecedores - GestVendas{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-users me-2"></i>Gestão de Clientes</h2>
+    <h2><i class="fas fa-truck me-2"></i>Gestão de Fornecedores</h2>
     <button class="btn btn-primary" onclick="alert('Funcionalidade de adicionar em desenvolvimento')">
-        <i class="fas fa-plus me-2"></i>Novo Cliente
+        <i class="fas fa-plus me-2"></i>Novo Fornecedor
     </button>
 </div>
 
@@ -15,8 +15,8 @@
     <form method="GET" class="row g-3">
         <div class="col-md-6">
             <div class="form-floating">
-                <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Pesquisar clientes...">
-                <label for="search">Pesquisar clientes...</label>
+                <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Pesquisar fornecedores...">
+                <label for="search">Pesquisar fornecedores...</label>
             </div>
         </div>
         <div class="col-md-2">
@@ -27,14 +27,14 @@
     </form>
 </div>
 
-<!-- Customers Table -->
+<!-- Suppliers Table -->
 <div class="data-card">
     <div class="header">
-        <h5><i class="fas fa-list me-2"></i>Lista de Clientes</h5>
-        <span class="badge bg-secondary">{{ customers.total }} clientes</span>
+        <h5><i class="fas fa-list me-2"></i>Lista de Fornecedores</h5>
+        <span class="badge bg-secondary">{{ suppliers.total }} fornecedores</span>
     </div>
     
-    {% if customers.items %}
+    {% if suppliers.items %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -42,24 +42,25 @@
                         <th>Nome</th>
                         <th>Email</th>
                         <th>Telefone</th>
-                        <th>Tipo</th>
+                        <th>Cidade</th>
                         <th>Status</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for customer in customers.items %}
+                    {% for supplier in suppliers.items %}
                         <tr>
-                            <td><strong>{{ customer.name }}</strong></td>
-                            <td>{{ customer.email or '-' }}</td>
-                            <td>{{ customer.phone or '-' }}</td>
                             <td>
-                                <span class="badge bg-info">
-                                    {{ 'Empresa' if customer.customer_type == 'empresa' else 'Particular' }}
-                                </span>
+                                <strong>{{ supplier.name }}</strong>
+                                {% if supplier.contact_person %}
+                                <br><small class="text-muted">Contacto: {{ supplier.contact_person }}</small>
+                                {% endif %}
                             </td>
+                            <td>{{ supplier.email or '-' }}</td>
+                            <td>{{ supplier.phone or '-' }}</td>
+                            <td>{{ supplier.city or '-' }}</td>
                             <td>
-                                {% if customer.is_active %}
+                                {% if supplier.is_active %}
                                     <span class="badge bg-success">Ativo</span>
                                 {% else %}
                                     <span class="badge bg-secondary">Inativo</span>
@@ -80,9 +81,9 @@
         </div>
     {% else %}
         <div class="empty-state">
-            <i class="fas fa-users fa-3x text-muted mb-3"></i>
-            <h5>Nenhum cliente encontrado</h5>
-            <p class="text-muted">Adicione um novo cliente para começar a registar vendas.</p>
+            <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+            <h5>Nenhum fornecedor encontrado</h5>
+            <p class="text-muted">Configure a base de dados ou adicione um novo fornecedor para começar.</p>
         </div>
     {% endif %}
 </div>

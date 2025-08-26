@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-bar me-2"></i>Relatórios</h2>
+</div>
+
+<!-- Report Cards -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="data-card">
+            <div class="header">
+                <h5><i class="fas fa-shopping-cart me-2"></i>Relatórios de Vendas</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-calendar-day me-2"></i>Vendas por Dia
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-calendar-week me-2"></i>Vendas por Semana
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-calendar-alt me-2"></i>Vendas por Mês
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-users me-2"></i>Vendas por Cliente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="data-card">
+            <div class="header">
+                <h5><i class="fas fa-box me-2"></i>Relatórios de Produtos</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-star me-2"></i>Produtos Mais Vendidos
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-warehouse me-2"></i>Estado do Stock
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Stock Baixo
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-chart-line me-2"></i>Valorização do Stock
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="data-card">
+            <div class="header">
+                <h5><i class="fas fa-shopping-bag me-2"></i>Relatórios de Compras</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-truck me-2"></i>Compras por Fornecedor
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-calendar-alt me-2"></i>Compras por Período
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-euro-sign me-2"></i>Valor das Compras
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="data-card">
+            <div class="header">
+                <h5><i class="fas fa-chart-pie me-2"></i>Relatórios Financeiros</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-money-bill me-2"></i>Resumo Financeiro
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-percentage me-2"></i>Margem de Lucro
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
+                        <i class="fas fa-receipt me-2"></i>IVA a Pagar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

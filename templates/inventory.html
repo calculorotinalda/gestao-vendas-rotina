@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Inventário - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-warehouse me-2"></i>Gestão de Inventário</h2>
+    <button class="btn btn-primary" onclick="alert('Funcionalidade de movimentação em desenvolvimento')">
+        <i class="fas fa-plus me-2"></i>Nova Movimentação
+    </button>
+</div>
+
+<!-- Inventory Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-primary">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-info">
+                <h3>0</h3>
+                <p>Produtos em Stock</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+                <h3>0</h3>
+                <p>Stock Baixo</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-danger">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3>0</h3>
+                <p>Sem Stock</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-success">
+                <i class="fas fa-euro-sign"></i>
+            </div>
+            <div class="stat-info">
+                <h3>€0,00</h3>
+                <p>Valor Total</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="data-card">
+    <div class="header">
+        <h5><i class="fas fa-list me-2"></i>Movimentações de Inventário</h5>
+        <span class="badge bg-secondary">{{ inventory.total }} movimentações</span>
+    </div>
+    
+    {% if inventory.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Produto</th>
+                        <th>Tipo</th>
+                        <th>Quantidade</th>
+                        <th>Referência</th>
+                        <th>Utilizador</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in inventory.items %}
+                        <tr>
+                            <td>{{ movement.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ movement.product_name }}</td>
+                            <td>
+                                {% if movement.movement_type == 'entrada' %}
+                                    <span class="badge bg-success">Entrada</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Saída</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ movement.quantity }}</td>
+                            <td>{{ movement.reference_type.title() }} #{{ movement.reference_id }}</td>
+                            <td>{{ movement.user_name }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-warehouse fa-3x text-muted mb-3"></i>
+            <h5>Nenhuma movimentação registada</h5>
+            <p class="text-muted">As movimentações de stock aparecerão aqui automaticamente.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
