@@ -170,11 +170,12 @@ def customers():
         return redirect(url_for('login'))
     
     try:
-        # For now, return empty customers list
-        customers = {'items': [], 'total': 0}
+        from models import Customer
+        customers_list = Customer.query.filter_by(is_active=True).all()
+        customers_data = {'items': customers_list, 'total': len(customers_list)}
         
         return render_template('customers.html', 
-                             customers=customers, 
+                             customers=customers_data, 
                              search='')
     except Exception as e:
         flash(f'Erro ao carregar clientes: {str(e)}', 'error')
@@ -189,9 +190,10 @@ def suppliers():
     try:
         from models import Supplier
         suppliers_list = Supplier.query.filter_by(is_active=True).all()
+        suppliers_data = {'items': suppliers_list, 'total': len(suppliers_list)}
         
         return render_template('suppliers.html', 
-                             suppliers={'items': suppliers_list, 'total': len(suppliers_list)}, 
+                             suppliers=suppliers_data, 
                              search='')
     except Exception as e:
         flash(f'Erro ao carregar fornecedores: {str(e)}', 'error')
@@ -204,10 +206,11 @@ def sales():
         return redirect(url_for('login'))
     
     try:
-        # For now, return empty sales list
-        sales = {'items': [], 'total': 0}
+        from models import Sale
+        sales_list = Sale.query.all()
+        sales_data = {'items': sales_list, 'total': len(sales_list)}
         
-        return render_template('sales.html', sales=sales)
+        return render_template('sales.html', sales=sales_data)
     except Exception as e:
         flash(f'Erro ao carregar vendas: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
@@ -219,10 +222,11 @@ def purchases():
         return redirect(url_for('login'))
     
     try:
-        # For now, return empty purchases list
-        purchases = {'items': [], 'total': 0}
+        from models import Purchase
+        purchases_list = Purchase.query.all()
+        purchases_data = {'items': purchases_list, 'total': len(purchases_list)}
         
-        return render_template('purchases.html', purchases=purchases)
+        return render_template('purchases.html', purchases=purchases_data)
     except Exception as e:
         flash(f'Erro ao carregar compras: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
@@ -234,10 +238,11 @@ def inventory():
         return redirect(url_for('login'))
     
     try:
-        # For now, return empty inventory list
-        inventory = {'items': [], 'total': 0}
+        from models import InventoryMovement
+        inventory_list = InventoryMovement.query.all()
+        inventory_data = {'items': inventory_list, 'total': len(inventory_list)}
         
-        return render_template('inventory.html', inventory=inventory)
+        return render_template('inventory.html', inventory=inventory_data)
     except Exception as e:
         flash(f'Erro ao carregar inventário: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
