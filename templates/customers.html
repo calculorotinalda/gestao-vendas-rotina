@@ -34,7 +34,7 @@
         <span class="badge bg-secondary">{{ customers.total }} clientes</span>
     </div>
     
-    {% if customers.items %}
+    {% if customers.data %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -48,7 +48,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for customer in customers.items %}
+                    {% for customer in customers.data %}
                         <tr>
                             <td><strong>{{ customer.name }}</strong></td>
                             <td>{{ customer.email or '-' }}</td>

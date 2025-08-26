@@ -65,7 +65,7 @@
         <span class="badge bg-secondary">{{ inventory.total }} movimentações</span>
     </div>
     
-    {% if inventory.items %}
+    {% if inventory.data %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -79,10 +79,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for movement in inventory.items %}
+                    {% for movement in inventory.data %}
                         <tr>
-                            <td>{{ movement.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-                            <td>{{ movement.product_name }}</td>
+                            <td>{{ movement.created_at.strftime('%d/%m/%Y %H:%M') if movement.created_at else 'N/A' }}</td>
+                            <td>Produto #{{ movement.product_id }}</td>
                             <td>
                                 {% if movement.movement_type == 'entrada' %}
                                     <span class="badge bg-success">Entrada</span>
@@ -91,8 +91,8 @@
                                 {% endif %}
                             </td>
                             <td>{{ movement.quantity }}</td>
-                            <td>{{ movement.reference_type.title() }} #{{ movement.reference_id }}</td>
-                            <td>{{ movement.user_name }}</td>
+                            <td>{{ movement.reference_type|title if movement.reference_type else 'N/A' }} #{{ movement.reference_id if movement.reference_id else '' }}</td>
+                            <td>Utilizador #{{ movement.user_id }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

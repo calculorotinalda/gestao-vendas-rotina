@@ -149,22 +149,35 @@ def products():
     
     try:
         from models import Category, Product
-        try:
-            categories = Category.query.filter_by(is_active=True).all()
-        except:
-            categories = []
         
+        # Get categories safely
+        categories = []
         try:
-            products_list = Product.query.filter_by(is_active=True).all()
-        except:
-            products_list = []
+            categories_query = Category.query.filter_by(is_active=True)
+            categories = list(categories_query.all())
+        except Exception as cat_error:
+            print(f"Category query error: {cat_error}")
+        
+        # Get products safely
+        products_list = []
+        try:
+            products_query = Product.query.filter_by(is_active=True)
+            products_list = list(products_query.all())
+        except Exception as prod_error:
+            print(f"Product query error: {prod_error}")
+        
+        products_data = {
+            'data': products_list,
+            'total': len(products_list)
+        }
         
         return render_template('products.html', 
-                             products={'items': products_list, 'total': len(products_list)}, 
+                             products=products_data, 
                              categories=categories, 
                              search='', 
                              selected_category='')
     except Exception as e:
+        print(f"Products route error: {e}")
         flash(f'Erro ao carregar produtos: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
 
@@ -174,21 +187,24 @@ def customers():
     if not session.get('user_id'):
         return redirect(url_for('login'))
     
+    customers_list = []
+    # Simple, safe query without complex error handling
     try:
         from models import Customer
-        try:
-            customers_list = Customer.query.filter_by(is_active=True).all()
-        except:
-            customers_list = []
-        
-        customers_data = {'items': customers_list, 'total': len(customers_list)}
-        
-        return render_template('customers.html', 
-                             customers=customers_data, 
-                             search='')
+        results = Customer.query.all()
+        customers_list = [customer for customer in results if customer.is_active]
     except Exception as e:
-        flash(f'Erro ao carregar clientes: {str(e)}', 'error')
-        return redirect(url_for('dashboard'))
+        print(f"Customer query error: {e}")
+        customers_list = []
+    
+    customers_data = {
+        'data': customers_list,
+        'total': len(customers_list)
+    }
+    
+    return render_template('customers.html', 
+                         customers=customers_data, 
+                         search='')
 
 # Suppliers routes
 @app.route('/suppliers') 
@@ -196,21 +212,24 @@ def suppliers():
     if not session.get('user_id'):
         return redirect(url_for('login'))
     
+    suppliers_list = []
+    # Simple, safe query without complex error handling
     try:
         from models import Supplier
-        try:
-            suppliers_list = Supplier.query.filter_by(is_active=True).all()
-        except:
-            suppliers_list = []
-        
-        suppliers_data = {'items': suppliers_list, 'total': len(suppliers_list)}
-        
-        return render_template('suppliers.html', 
-                             suppliers=suppliers_data, 
-                             search='')
+        results = Supplier.query.all()
+        suppliers_list = [supplier for supplier in results if supplier.is_active]
     except Exception as e:
-        flash(f'Erro ao carregar fornecedores: {str(e)}', 'error')
-        return redirect(url_for('dashboard'))
+        print(f"Supplier query error: {e}")
+        suppliers_list = []
+    
+    suppliers_data = {
+        'data': suppliers_list,
+        'total': len(suppliers_list)
+    }
+    
+    return render_template('suppliers.html', 
+                         suppliers=suppliers_data, 
+                         search='')
 
 # Sales routes
 @app.route('/sales')
@@ -219,16 +238,22 @@ def sales():
         return redirect(url_for('login'))
     
     try:
-        from models import Sale
+        sales_list = []
         try:
-            sales_list = Sale.query.all()
-        except:
-            sales_list = []
+            from models import Sale
+            sales_query = Sale.query
+            sales_list = list(sales_query.all())
+        except Exception as sales_error:
+            print(f"Sales query error: {sales_error}")
         
-        sales_data = {'items': sales_list, 'total': len(sales_list)}
+        sales_data = {
+            'data': sales_list,
+            'total': len(sales_list)
+        }
         
         return render_template('sales.html', sales=sales_data)
     except Exception as e:
+        print(f"Sales route error: {e}")
         flash(f'Erro ao carregar vendas: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
 
@@ -239,16 +264,22 @@ def purchases():
         return redirect(url_for('login'))
     
     try:
-        from models import Purchase
+        purchases_list = []
         try:
-            purchases_list = Purchase.query.all()
-        except:
-            purchases_list = []
+            from models import Purchase
+            purchases_query = Purchase.query
+            purchases_list = list(purchases_query.all())
+        except Exception as purch_error:
+            print(f"Purchase query error: {purch_error}")
         
-        purchases_data = {'items': purchases_list, 'total': len(purchases_list)}
+        purchases_data = {
+            'data': purchases_list,
+            'total': len(purchases_list)
+        }
         
         return render_template('purchases.html', purchases=purchases_data)
     except Exception as e:
+        print(f"Purchases route error: {e}")
         flash(f'Erro ao carregar compras: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
 
@@ -259,16 +290,22 @@ def inventory():
         return redirect(url_for('login'))
     
     try:
-        from models import InventoryMovement
+        inventory_list = []
         try:
-            inventory_list = InventoryMovement.query.all()
-        except:
-            inventory_list = []
+            from models import InventoryMovement
+            inventory_query = InventoryMovement.query
+            inventory_list = list(inventory_query.all())
+        except Exception as inv_error:
+            print(f"Inventory query error: {inv_error}")
         
-        inventory_data = {'items': inventory_list, 'total': len(inventory_list)}
+        inventory_data = {
+            'data': inventory_list,
+            'total': len(inventory_list)
+        }
         
         return render_template('inventory.html', inventory=inventory_data)
     except Exception as e:
+        print(f"Inventory route error: {e}")
         flash(f'Erro ao carregar inventário: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
 

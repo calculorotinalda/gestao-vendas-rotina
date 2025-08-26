@@ -17,7 +17,7 @@
         <span class="badge bg-secondary">{{ purchases.total }} compras</span>
     </div>
     
-    {% if purchases.items %}
+    {% if purchases.data %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -31,14 +31,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for purchase in purchases.items %}
+                    {% for purchase in purchases.data %}
                         <tr>
-                            <td><code>{{ purchase.reference_number }}</code></td>
-                            <td>{{ purchase.supplier_name }}</td>
-                            <td>{{ purchase.purchase_date.strftime('%d/%m/%Y') }}</td>
-                            <td><strong>€{{ "%.2f"|format(purchase.total_amount) }}</strong></td>
+                            <td><code>{{ purchase.invoice_number }}</code></td>
+                            <td>Fornecedor #{{ purchase.supplier_id }}</td>
+                            <td>{{ purchase.purchase_date.strftime('%d/%m/%Y') if purchase.purchase_date else 'N/A' }}</td>
+                            <td><strong>{{ format_currency(purchase.total_amount) }}</strong></td>
                             <td>
-                                <span class="badge bg-info">{{ purchase.status.title() }}</span>
+                                <span class="badge bg-info">{{ purchase.status|title if purchase.status else 'Pendente' }}</span>
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-outline-primary" onclick="alert('Ver detalhes em desenvolvimento')">

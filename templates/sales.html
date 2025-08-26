@@ -65,7 +65,7 @@
         <span class="badge bg-secondary">{{ sales.total }} vendas</span>
     </div>
     
-    {% if sales.items %}
+    {% if sales.data %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -79,14 +79,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for sale in sales.items %}
+                    {% for sale in sales.data %}
                         <tr>
                             <td><code>{{ sale.invoice_number }}</code></td>
-                            <td>{{ sale.customer_name }}</td>
-                            <td>{{ sale.sale_date.strftime('%d/%m/%Y') }}</td>
-                            <td><strong>€{{ "%.2f"|format(sale.total_amount) }}</strong></td>
+                            <td>Cliente #{{ sale.customer_id }}</td>
+                            <td>{{ sale.sale_date.strftime('%d/%m/%Y') if sale.sale_date else 'N/A' }}</td>
+                            <td><strong>{{ format_currency(sale.total_amount) }}</strong></td>
                             <td>
-                                <span class="badge bg-success">{{ sale.status.title() }}</span>
+                                <span class="badge bg-success">{{ sale.status|title if sale.status else 'Pendente' }}</span>
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-outline-primary" onclick="alert('Ver detalhes em desenvolvimento')">
