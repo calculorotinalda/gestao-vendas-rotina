@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Venda - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-plus me-2"></i>Nova Venda</h2>
+    <a href="{{ url_for('sales') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="data-card">
+    <form method="POST">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="customer_id" class="form-label">Cliente <span class="text-danger">*</span></label>
+                    <select class="form-control" id="customer_id" name="customer_id" required>
+                        <option value="">Seleccionar cliente</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="sale_date" class="form-label">Data da Venda <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="sale_date" name="sale_date" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="due_date" class="form-label">Data de Vencimento</label>
+                    <input type="date" class="form-control" id="due_date" name="due_date">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="subtotal" class="form-label">Subtotal (€) <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" class="form-control" id="subtotal" name="subtotal" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="tax_amount" class="form-label">IVA (€)</label>
+                    <input type="number" step="0.01" class="form-control" id="tax_amount" name="tax_amount" value="0.00">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="discount" class="form-label">Desconto (€)</label>
+                    <input type="number" step="0.01" class="form-control" id="discount" name="discount" value="0.00">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="total_amount" class="form-label">Total (€) <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" class="form-control" id="total_amount" name="total_amount" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="payment_method" class="form-label">Método de Pagamento</label>
+                    <select class="form-control" id="payment_method" name="payment_method">
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="cartao">Cartão</option>
+                        <option value="transferencia">Transferência</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="mb_way">MB Way</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="status" class="form-label">Estado</label>
+                    <select class="form-control" id="status" name="status">
+                        <option value="pendente">Pendente</option>
+                        <option value="pago" selected>Pago</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="notes" class="form-label">Observações</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+        </div>
+        
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('sales') }}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>Registar Venda
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

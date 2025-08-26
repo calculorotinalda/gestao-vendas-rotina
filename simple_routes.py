@@ -1,5 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, session
-from app import app
+from app import app, db
+from datetime import datetime
+import secrets
 
 @app.route('/')
 def index():
@@ -348,3 +350,368 @@ def format_currency(amount):
     return f"{amount:,.2f} €"
 
 app.jinja_env.globals.update(format_currency=format_currency)
+
+# =============== ADD ROUTES ===============
+
+# Add Product
+@app.route('/products/add', methods=['GET', 'POST'])
+def add_product():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        try:
+            from models import Product, Category
+            
+            # Generate unique invoice number
+            code = request.form.get('code')
+            name = request.form.get('name')
+            
+            # Check if code already exists
+            existing_product = Product.query.filter_by(code=code).first()
+            if existing_product:
+                flash('Código do produto já existe. Use um código diferente.', 'error')
+                return redirect(url_for('add_product'))
+            
+            new_product = Product(
+                code=code,
+                name=name,
+                description=request.form.get('description'),
+                category_id=int(request.form.get('category_id')),
+                unit=request.form.get('unit', 'un'),
+                purchase_price=float(request.form.get('purchase_price', 0)),
+                sale_price=float(request.form.get('sale_price')),
+                tax_rate=float(request.form.get('tax_rate', 23)),
+                stock_quantity=int(request.form.get('stock_quantity', 0)),
+                min_stock=int(request.form.get('min_stock', 0)),
+                max_stock=int(request.form.get('max_stock', 100)),
+                user_id=session['user_id'],
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+            db.session.add(new_product)
+            db.session.commit()
+            
+            flash('Produto adicionado com sucesso!', 'success')
+            return redirect(url_for('products'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error adding product: {e}")
+            flash(f'Erro ao adicionar produto: {str(e)}', 'error')
+    
+    # Get categories for dropdown
+    categories = []
+    try:
+        from models import Category
+        categories = Category.query.all()
+    except Exception as e:
+        print(f"Error loading categories: {e}")
+    
+    return render_template('forms/add_product.html', categories=categories)
+
+# Add Customer
+@app.route('/customers/add', methods=['GET', 'POST'])
+def add_customer():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        try:
+            from models import Customer
+            
+            new_customer = Customer(
+                name=request.form.get('name'),
+                email=request.form.get('email'),
+                phone=request.form.get('phone'),
+                address=request.form.get('address'),
+                city=request.form.get('city'),
+                postal_code=request.form.get('postal_code'),
+                country=request.form.get('country', 'Portugal'),
+                tax_number=request.form.get('tax_number'),
+                customer_type=request.form.get('customer_type', 'particular'),
+                is_active=bool(request.form.get('is_active')),
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+            db.session.add(new_customer)
+            db.session.commit()
+            
+            flash('Cliente adicionado com sucesso!', 'success')
+            return redirect(url_for('customers'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error adding customer: {e}")
+            flash(f'Erro ao adicionar cliente: {str(e)}', 'error')
+    
+    return render_template('forms/add_customer.html')
+
+# Add Supplier
+@app.route('/suppliers/add', methods=['GET', 'POST'])
+def add_supplier():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        try:
+            from models import Supplier
+            
+            new_supplier = Supplier(
+                name=request.form.get('name'),
+                contact_person=request.form.get('contact_person'),
+                email=request.form.get('email'),
+                phone=request.form.get('phone'),
+                address=request.form.get('address'),
+                city=request.form.get('city'),
+                postal_code=request.form.get('postal_code'),
+                country=request.form.get('country', 'Portugal'),
+                tax_number=request.form.get('tax_number'),
+                is_active=bool(request.form.get('is_active')),
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+            db.session.add(new_supplier)
+            db.session.commit()
+            
+            flash('Fornecedor adicionado com sucesso!', 'success')
+            return redirect(url_for('suppliers'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error adding supplier: {e}")
+            flash(f'Erro ao adicionar fornecedor: {str(e)}', 'error')
+    
+    return render_template('forms/add_supplier.html')
+
+# Add Sale
+@app.route('/sales/add', methods=['GET', 'POST'])
+def add_sale():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        try:
+            from models import Sale
+            
+            # Generate unique invoice number
+            invoice_number = f"VEN{datetime.now().strftime('%Y%m%d')}{secrets.token_hex(3).upper()}"
+            
+            new_sale = Sale(
+                invoice_number=invoice_number,
+                customer_id=int(request.form.get('customer_id')),
+                user_id=session['user_id'],
+                sale_date=datetime.strptime(request.form.get('sale_date'), '%Y-%m-%d').date(),
+                due_date=datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date() if request.form.get('due_date') else None,
+                subtotal=float(request.form.get('subtotal')),
+                tax_amount=float(request.form.get('tax_amount', 0)),
+                total_amount=float(request.form.get('total_amount')),
+                discount=float(request.form.get('discount', 0)),
+                status=request.form.get('status', 'pendente'),
+                payment_method=request.form.get('payment_method', 'dinheiro'),
+                notes=request.form.get('notes'),
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+            db.session.add(new_sale)
+            db.session.commit()
+            
+            flash('Venda registada com sucesso!', 'success')
+            return redirect(url_for('sales'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error adding sale: {e}")
+            flash(f'Erro ao registar venda: {str(e)}', 'error')
+    
+    # Get customers for dropdown
+    customers = []
+    try:
+        from models import Customer
+        customers = Customer.query.filter_by(is_active=True).all()
+    except Exception as e:
+        print(f"Error loading customers: {e}")
+    
+    return render_template('forms/add_sale.html', customers=customers)
+
+# Add Purchase
+@app.route('/purchases/add', methods=['GET', 'POST'])
+def add_purchase():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        try:
+            from models import Purchase
+            
+            # Generate unique invoice number
+            invoice_number = f"COM{datetime.now().strftime('%Y%m%d')}{secrets.token_hex(3).upper()}"
+            
+            new_purchase = Purchase(
+                invoice_number=invoice_number,
+                supplier_id=int(request.form.get('supplier_id')),
+                user_id=session['user_id'],
+                purchase_date=datetime.strptime(request.form.get('purchase_date'), '%Y-%m-%d').date(),
+                due_date=datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date() if request.form.get('due_date') else None,
+                subtotal=float(request.form.get('subtotal')),
+                tax_amount=float(request.form.get('tax_amount', 0)),
+                total_amount=float(request.form.get('total_amount')),
+                status=request.form.get('status', 'pendente'),
+                payment_method=request.form.get('payment_method', 'transferencia'),
+                notes=request.form.get('notes'),
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+            db.session.add(new_purchase)
+            db.session.commit()
+            
+            flash('Compra registada com sucesso!', 'success')
+            return redirect(url_for('purchases'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error adding purchase: {e}")
+            flash(f'Erro ao registar compra: {str(e)}', 'error')
+    
+    # Get suppliers for dropdown
+    suppliers = []
+    try:
+        from models import Supplier
+        suppliers = Supplier.query.filter_by(is_active=True).all()
+    except Exception as e:
+        print(f"Error loading suppliers: {e}")
+    
+    return render_template('forms/add_purchase.html', suppliers=suppliers)
+
+# =============== DELETE ROUTES ===============
+
+# Delete Product
+@app.route('/products/delete/<int:id>')
+def delete_product(id):
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        from models import Product
+        product = Product.query.get_or_404(id)
+        
+        db.session.delete(product)
+        db.session.commit()
+        
+        flash('Produto eliminado com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting product: {e}")
+        flash(f'Erro ao eliminar produto: {str(e)}', 'error')
+    
+    return redirect(url_for('products'))
+
+# Delete Customer
+@app.route('/customers/delete/<int:id>')
+def delete_customer(id):
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        from models import Customer
+        customer = Customer.query.get_or_404(id)
+        
+        db.session.delete(customer)
+        db.session.commit()
+        
+        flash('Cliente eliminado com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting customer: {e}")
+        flash(f'Erro ao eliminar cliente: {str(e)}', 'error')
+    
+    return redirect(url_for('customers'))
+
+# Delete Supplier
+@app.route('/suppliers/delete/<int:id>')
+def delete_supplier(id):
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        from models import Supplier
+        supplier = Supplier.query.get_or_404(id)
+        
+        db.session.delete(supplier)
+        db.session.commit()
+        
+        flash('Fornecedor eliminado com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting supplier: {e}")
+        flash(f'Erro ao eliminar fornecedor: {str(e)}', 'error')
+    
+    return redirect(url_for('suppliers'))
+
+# Delete Sale
+@app.route('/sales/delete/<int:id>')
+def delete_sale(id):
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        from models import Sale
+        sale = Sale.query.get_or_404(id)
+        
+        db.session.delete(sale)
+        db.session.commit()
+        
+        flash('Venda eliminada com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting sale: {e}")
+        flash(f'Erro ao eliminar venda: {str(e)}', 'error')
+    
+    return redirect(url_for('sales'))
+
+# Delete Purchase
+@app.route('/purchases/delete/<int:id>')
+def delete_purchase(id):
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        from models import Purchase
+        purchase = Purchase.query.get_or_404(id)
+        
+        db.session.delete(purchase)
+        db.session.commit()
+        
+        flash('Compra eliminada com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting purchase: {e}")
+        flash(f'Erro ao eliminar compra: {str(e)}', 'error')
+    
+    return redirect(url_for('purchases'))
+
+# Delete Inventory Movement
+@app.route('/inventory/delete/<int:id>')
+def delete_inventory_movement(id):
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        from models import InventoryMovement
+        movement = InventoryMovement.query.get_or_404(id)
+        
+        db.session.delete(movement)
+        db.session.commit()
+        
+        flash('Movimento de inventário eliminado com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting inventory movement: {e}")
+        flash(f'Erro ao eliminar movimento: {str(e)}', 'error')
+    
+    return redirect(url_for('inventory'))
