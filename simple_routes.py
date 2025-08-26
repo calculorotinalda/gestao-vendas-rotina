@@ -148,14 +148,19 @@ def products():
         return redirect(url_for('login'))
     
     try:
-        from models import Category
-        categories = Category.query.filter_by(is_active=True).all()
+        from models import Category, Product
+        try:
+            categories = Category.query.filter_by(is_active=True).all()
+        except:
+            categories = []
         
-        # For now, return empty products list since we need to set up the full system
-        products = []
+        try:
+            products_list = Product.query.filter_by(is_active=True).all()
+        except:
+            products_list = []
         
         return render_template('products.html', 
-                             products={'items': products, 'total': 0}, 
+                             products={'items': products_list, 'total': len(products_list)}, 
                              categories=categories, 
                              search='', 
                              selected_category='')
@@ -171,7 +176,11 @@ def customers():
     
     try:
         from models import Customer
-        customers_list = Customer.query.filter_by(is_active=True).all()
+        try:
+            customers_list = Customer.query.filter_by(is_active=True).all()
+        except:
+            customers_list = []
+        
         customers_data = {'items': customers_list, 'total': len(customers_list)}
         
         return render_template('customers.html', 
@@ -189,7 +198,11 @@ def suppliers():
     
     try:
         from models import Supplier
-        suppliers_list = Supplier.query.filter_by(is_active=True).all()
+        try:
+            suppliers_list = Supplier.query.filter_by(is_active=True).all()
+        except:
+            suppliers_list = []
+        
         suppliers_data = {'items': suppliers_list, 'total': len(suppliers_list)}
         
         return render_template('suppliers.html', 
@@ -207,7 +220,11 @@ def sales():
     
     try:
         from models import Sale
-        sales_list = Sale.query.all()
+        try:
+            sales_list = Sale.query.all()
+        except:
+            sales_list = []
+        
         sales_data = {'items': sales_list, 'total': len(sales_list)}
         
         return render_template('sales.html', sales=sales_data)
@@ -223,7 +240,11 @@ def purchases():
     
     try:
         from models import Purchase
-        purchases_list = Purchase.query.all()
+        try:
+            purchases_list = Purchase.query.all()
+        except:
+            purchases_list = []
+        
         purchases_data = {'items': purchases_list, 'total': len(purchases_list)}
         
         return render_template('purchases.html', purchases=purchases_data)
@@ -239,7 +260,11 @@ def inventory():
     
     try:
         from models import InventoryMovement
-        inventory_list = InventoryMovement.query.all()
+        try:
+            inventory_list = InventoryMovement.query.all()
+        except:
+            inventory_list = []
+        
         inventory_data = {'items': inventory_list, 'total': len(inventory_list)}
         
         return render_template('inventory.html', inventory=inventory_data)
