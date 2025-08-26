@@ -63,7 +63,7 @@ def setup_db():
             # Create admin user
             """
             INSERT INTO users (username, email, password_hash, full_name, role, is_active, created_at, updated_at)
-            SELECT 'admin', 'admin@gestvendas.com', 'scrypt:32768:8:1$jK8tC3QzwGxB0123$abcd1234...', 'Administrador', 'admin', true, NOW(), NOW()
+            SELECT 'admin', 'admin@gestvendas.com', 'scrypt:32768:8:1$pPzReLiL5gLTDZD6$1db227ba4a74326cd7fb48fede70048d419011180540945f5706604f4090eecc90789fee9ebf31d3df5c1fb5be0180f8528671085754c4fcb41a6e7af36fac26', 'Administrador', 'admin', true, NOW(), NOW()
             WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
             """,
             
