@@ -36,6 +36,9 @@ Preferred communication style: Simple, everyday language.
 - **Purchase Management**: Supplier purchase tracking
 - **User Management**: Multi-user support with role-based permissions
 - **Financial Reporting**: Currency formatting and tax calculations
+- **CRUD Operations**: Complete create, read, update, delete functionality for all entities
+- **Data Validation**: Form validation with required fields and type checking
+- **Automated Numbering**: Unique invoice numbers for sales and purchases
 
 ## Security Measures
 - **Password Security**: Werkzeug password hashing

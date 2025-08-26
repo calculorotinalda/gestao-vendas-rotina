@@ -376,16 +376,16 @@ def add_product():
             new_product = Product(
                 code=code,
                 name=name,
-                description=request.form.get('description'),
-                category_id=int(request.form.get('category_id')),
+                description=request.form.get('description', ''),
+                category_id=int(request.form.get('category_id') or 1),
                 unit=request.form.get('unit', 'un'),
-                purchase_price=float(request.form.get('purchase_price', 0)),
-                sale_price=float(request.form.get('sale_price')),
-                tax_rate=float(request.form.get('tax_rate', 23)),
-                stock_quantity=int(request.form.get('stock_quantity', 0)),
-                min_stock=int(request.form.get('min_stock', 0)),
-                max_stock=int(request.form.get('max_stock', 100)),
-                user_id=session['user_id'],
+                purchase_price=float(request.form.get('purchase_price') or 0),
+                sale_price=float(request.form.get('sale_price') or 0),
+                tax_rate=float(request.form.get('tax_rate') or 23),
+                stock_quantity=int(request.form.get('stock_quantity') or 0),
+                min_stock=int(request.form.get('min_stock') or 0),
+                max_stock=int(request.form.get('max_stock') or 100),
+                is_active=True,
                 created_at=datetime.now(),
                 updated_at=datetime.now()
             )
@@ -422,14 +422,14 @@ def add_customer():
             from models import Customer
             
             new_customer = Customer(
-                name=request.form.get('name'),
-                email=request.form.get('email'),
-                phone=request.form.get('phone'),
-                address=request.form.get('address'),
-                city=request.form.get('city'),
-                postal_code=request.form.get('postal_code'),
+                name=request.form.get('name', ''),
+                email=request.form.get('email', ''),
+                phone=request.form.get('phone', ''),
+                address=request.form.get('address', ''),
+                city=request.form.get('city', ''),
+                postal_code=request.form.get('postal_code', ''),
                 country=request.form.get('country', 'Portugal'),
-                tax_number=request.form.get('tax_number'),
+                tax_number=request.form.get('tax_number', ''),
                 customer_type=request.form.get('customer_type', 'particular'),
                 is_active=bool(request.form.get('is_active')),
                 created_at=datetime.now(),
@@ -460,15 +460,15 @@ def add_supplier():
             from models import Supplier
             
             new_supplier = Supplier(
-                name=request.form.get('name'),
-                contact_person=request.form.get('contact_person'),
-                email=request.form.get('email'),
-                phone=request.form.get('phone'),
-                address=request.form.get('address'),
-                city=request.form.get('city'),
-                postal_code=request.form.get('postal_code'),
+                name=request.form.get('name', ''),
+                contact_person=request.form.get('contact_person', ''),
+                email=request.form.get('email', ''),
+                phone=request.form.get('phone', ''),
+                address=request.form.get('address', ''),
+                city=request.form.get('city', ''),
+                postal_code=request.form.get('postal_code', ''),
                 country=request.form.get('country', 'Portugal'),
-                tax_number=request.form.get('tax_number'),
+                tax_number=request.form.get('tax_number', ''),
                 is_active=bool(request.form.get('is_active')),
                 created_at=datetime.now(),
                 updated_at=datetime.now()
@@ -500,19 +500,26 @@ def add_sale():
             # Generate unique invoice number
             invoice_number = f"VEN{datetime.now().strftime('%Y%m%d')}{secrets.token_hex(3).upper()}"
             
+            # Safely parse dates
+            sale_date_str = request.form.get('sale_date')
+            due_date_str = request.form.get('due_date')
+            
+            sale_date = datetime.strptime(sale_date_str, '%Y-%m-%d').date() if sale_date_str else datetime.now().date()
+            due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
+            
             new_sale = Sale(
                 invoice_number=invoice_number,
-                customer_id=int(request.form.get('customer_id')),
+                customer_id=int(request.form.get('customer_id') or 1),
                 user_id=session['user_id'],
-                sale_date=datetime.strptime(request.form.get('sale_date'), '%Y-%m-%d').date(),
-                due_date=datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date() if request.form.get('due_date') else None,
-                subtotal=float(request.form.get('subtotal')),
-                tax_amount=float(request.form.get('tax_amount', 0)),
-                total_amount=float(request.form.get('total_amount')),
-                discount=float(request.form.get('discount', 0)),
+                sale_date=sale_date,
+                due_date=due_date,
+                subtotal=float(request.form.get('subtotal') or 0),
+                tax_amount=float(request.form.get('tax_amount') or 0),
+                total_amount=float(request.form.get('total_amount') or 0),
+                discount=float(request.form.get('discount') or 0),
                 status=request.form.get('status', 'pendente'),
                 payment_method=request.form.get('payment_method', 'dinheiro'),
-                notes=request.form.get('notes'),
+                notes=request.form.get('notes', ''),
                 created_at=datetime.now(),
                 updated_at=datetime.now()
             )
@@ -536,7 +543,7 @@ def add_sale():
     except Exception as e:
         print(f"Error loading customers: {e}")
     
-    return render_template('forms/add_sale.html', customers=customers)
+    return render_template('forms/add_sale.html', customers=customers, today=datetime.now().strftime('%Y-%m-%d'))
 
 # Add Purchase
 @app.route('/purchases/add', methods=['GET', 'POST'])
@@ -551,18 +558,25 @@ def add_purchase():
             # Generate unique invoice number
             invoice_number = f"COM{datetime.now().strftime('%Y%m%d')}{secrets.token_hex(3).upper()}"
             
+            # Safely parse dates
+            purchase_date_str = request.form.get('purchase_date')
+            due_date_str = request.form.get('due_date')
+            
+            purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date() if purchase_date_str else datetime.now().date()
+            due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
+            
             new_purchase = Purchase(
                 invoice_number=invoice_number,
-                supplier_id=int(request.form.get('supplier_id')),
+                supplier_id=int(request.form.get('supplier_id') or 1),
                 user_id=session['user_id'],
-                purchase_date=datetime.strptime(request.form.get('purchase_date'), '%Y-%m-%d').date(),
-                due_date=datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date() if request.form.get('due_date') else None,
-                subtotal=float(request.form.get('subtotal')),
-                tax_amount=float(request.form.get('tax_amount', 0)),
-                total_amount=float(request.form.get('total_amount')),
+                purchase_date=purchase_date,
+                due_date=due_date,
+                subtotal=float(request.form.get('subtotal') or 0),
+                tax_amount=float(request.form.get('tax_amount') or 0),
+                total_amount=float(request.form.get('total_amount') or 0),
                 status=request.form.get('status', 'pendente'),
                 payment_method=request.form.get('payment_method', 'transferencia'),
-                notes=request.form.get('notes'),
+                notes=request.form.get('notes', ''),
                 created_at=datetime.now(),
                 updated_at=datetime.now()
             )
@@ -586,7 +600,49 @@ def add_purchase():
     except Exception as e:
         print(f"Error loading suppliers: {e}")
     
-    return render_template('forms/add_purchase.html', suppliers=suppliers)
+    return render_template('forms/add_purchase.html', suppliers=suppliers, today=datetime.now().strftime('%Y-%m-%d'))
+
+# Add Inventory Movement
+@app.route('/inventory/add', methods=['GET', 'POST'])
+def add_inventory():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        try:
+            from models import InventoryMovement
+            
+            new_movement = InventoryMovement(
+                product_id=int(request.form.get('product_id') or 1),
+                movement_type=request.form.get('movement_type', 'entrada'),
+                quantity=int(request.form.get('quantity') or 0),
+                reference_type=request.form.get('reference_type', 'manual'),
+                reference_id=int(request.form.get('reference_id') or 0) if request.form.get('reference_id') else None,
+                notes=request.form.get('notes', ''),
+                user_id=session['user_id'],
+                created_at=datetime.now()
+            )
+            
+            db.session.add(new_movement)
+            db.session.commit()
+            
+            flash('Movimento de inventário registado com sucesso!', 'success')
+            return redirect(url_for('inventory'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error adding inventory movement: {e}")
+            flash(f'Erro ao registar movimento: {str(e)}', 'error')
+    
+    # Get products for dropdown
+    products = []
+    try:
+        from models import Product
+        products = Product.query.all()
+    except Exception as e:
+        print(f"Error loading products: {e}")
+    
+    return render_template('forms/add_inventory.html', products=products)
 
 # =============== DELETE ROUTES ===============
 
