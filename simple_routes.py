@@ -141,6 +141,123 @@ def test_db():
     except Exception as e:
         return f"Falha na ligação à base de dados: {str(e)}"
 
+# Products routes
+@app.route('/products')
+def products():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        from models import Category
+        categories = Category.query.filter_by(is_active=True).all()
+        
+        # For now, return empty products list since we need to set up the full system
+        products = []
+        
+        return render_template('products.html', 
+                             products={'items': products, 'total': 0}, 
+                             categories=categories, 
+                             search='', 
+                             selected_category='')
+    except Exception as e:
+        flash(f'Erro ao carregar produtos: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+# Customers routes  
+@app.route('/customers')
+def customers():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        # For now, return empty customers list
+        customers = {'items': [], 'total': 0}
+        
+        return render_template('customers.html', 
+                             customers=customers, 
+                             search='')
+    except Exception as e:
+        flash(f'Erro ao carregar clientes: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+# Suppliers routes
+@app.route('/suppliers') 
+def suppliers():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        from models import Supplier
+        suppliers_list = Supplier.query.filter_by(is_active=True).all()
+        
+        return render_template('suppliers.html', 
+                             suppliers={'items': suppliers_list, 'total': len(suppliers_list)}, 
+                             search='')
+    except Exception as e:
+        flash(f'Erro ao carregar fornecedores: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+# Sales routes
+@app.route('/sales')
+def sales():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        # For now, return empty sales list
+        sales = {'items': [], 'total': 0}
+        
+        return render_template('sales.html', sales=sales)
+    except Exception as e:
+        flash(f'Erro ao carregar vendas: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+# Purchases routes  
+@app.route('/purchases')
+def purchases():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        # For now, return empty purchases list
+        purchases = {'items': [], 'total': 0}
+        
+        return render_template('purchases.html', purchases=purchases)
+    except Exception as e:
+        flash(f'Erro ao carregar compras: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+# Inventory routes
+@app.route('/inventory')
+def inventory():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        # For now, return empty inventory list
+        inventory = {'items': [], 'total': 0}
+        
+        return render_template('inventory.html', inventory=inventory)
+    except Exception as e:
+        flash(f'Erro ao carregar inventário: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+# Reports routes
+@app.route('/reports')
+def reports():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    return render_template('reports.html')
+
+# Analytics routes  
+@app.route('/analytics')
+def analytics():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    return render_template('analytics.html')
+
 @app.context_processor
 def inject_user():
     return dict(
