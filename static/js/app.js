@@ -163,16 +163,8 @@ const App = {
     
     // Load dashboard charts
     loadDashboardCharts() {
-        fetch('/api/dashboard/charts')
-            .then(response => response.json())
-            .then(data => {
-                this.renderSalesChart(data.sales);
-                this.renderProductsChart(data.products);
-            })
-            .catch(error => {
-                console.error('Error loading dashboard charts:', error);
-                this.showToast('Erro ao carregar gráficos', 'error');
-            });
+        // Charts disabled - static dashboard mode
+        console.log('Charts disabled - using static dashboard mode');
     },
     
     // Render sales chart
