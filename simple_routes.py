@@ -441,12 +441,7 @@ def reports():
         return redirect(url_for('dashboard'))
 
 # Analytics routes  
-@app.route('/analytics')
-def analytics():
-    if not session.get('user_id'):
-        return redirect(url_for('login'))
-    
-    return render_template('analytics.html')
+# Analytics route moved to routes.py to avoid duplication
 
 @app.context_processor
 def inject_user():
