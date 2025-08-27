@@ -22,17 +22,10 @@ def login():
             from models import User
             from werkzeug.security import check_password_hash
             
-            print(f"Login attempt: {login_field} / {password}")
-            
             # Find user by username or email
             user = User.query.filter(
                 (User.username == login_field) | (User.email == login_field)
             ).first()
-            
-            print(f"User found: {user is not None}")
-            if user:
-                print(f"User active: {user.is_active}")
-                print(f"Password check: {check_password_hash(user.password_hash, password)}")
             
             if user and check_password_hash(user.password_hash, password):
                 if not user.is_active:
@@ -43,17 +36,13 @@ def login():
                     session['username'] = user.username
                     session['user_role'] = user.role
                     session['full_name'] = user.full_name
-                    print(f"Login successful for {user.username}")
                     flash(f'Bem-vindo de volta, {user.full_name}!', 'success')
                     return redirect(url_for('dashboard'))
             else:
-                print("Login failed - invalid credentials")
                 flash('Credenciais inválidas. Verifique o utilizador/email e palavra-passe.', 'error')
                 
         except Exception as e:
             print(f"Error during login: {e}")
-            import traceback
-            traceback.print_exc()
             flash('Erro de base de dados. Tente novamente.', 'error')
     
     return render_template('login.html')
@@ -127,6 +116,49 @@ def logout():
     session.clear()
     flash('Logout realizado com sucesso!', 'success')
     return redirect(url_for('login'))
+
+@app.route('/analytics')
+def analytics():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    # Simple analytics data for now
+    try:
+        from models import Sale, Purchase, Product, Customer
+        from datetime import datetime, timedelta
+        from sqlalchemy import func
+        
+        # Basic stats
+        total_sales = db.session.query(func.sum(Sale.total_amount)).scalar() or 0
+        total_purchases = db.session.query(func.sum(Purchase.total_amount)).scalar() or 0
+        total_customers = Customer.query.count()
+        total_products = Product.query.count()
+        
+        # Monthly data for charts
+        last_30_days = datetime.now() - timedelta(days=30)
+        monthly_sales = db.session.query(func.sum(Sale.total_amount)).filter(
+            Sale.created_at >= last_30_days
+        ).scalar() or 0
+        
+        analytics_data = {
+            'total_sales': float(total_sales),
+            'total_purchases': float(total_purchases), 
+            'total_customers': total_customers,
+            'total_products': total_products,
+            'monthly_sales': float(monthly_sales),
+            'profit_margin': float((total_sales - total_purchases) / total_sales * 100) if total_sales > 0 else 0,
+            'sales_data': [float(monthly_sales)],  # Simple data for chart
+            'purchase_data': [float(total_purchases)],
+            'category_labels': ['Geral'],
+            'category_data': [float(total_sales)]
+        }
+        
+        return render_template('analytics.html', **analytics_data)
+        
+    except Exception as e:
+        print(f"Analytics error: {e}")
+        flash('Erro ao carregar análises.', 'error')
+        return redirect(url_for('dashboard'))
 
 # Database setup using direct SQL
 @app.route('/setup-db')
