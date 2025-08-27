@@ -752,15 +752,15 @@ def add_purchase():
             due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
             
             new_purchase = Purchase(
-                invoice_number=invoice_number,
+                purchase_number=invoice_number,
                 supplier_id=int(request.form.get('supplier_id') or 1),
                 user_id=session['user_id'],
                 purchase_date=purchase_date,
                 due_date=due_date,
-                subtotal=float(request.form.get('subtotal') or 0),
+                subtotal_amount=float(request.form.get('subtotal') or 0),
                 tax_amount=float(request.form.get('tax_amount') or 0),
                 total_amount=float(request.form.get('total_amount') or 0),
-                status=request.form.get('status', 'pendente'),
+                status=request.form.get('status', 'concluida'),
                 payment_method=request.form.get('payment_method', 'transferencia'),
                 notes=request.form.get('notes', ''),
                 created_at=datetime.now(),
@@ -768,6 +768,69 @@ def add_purchase():
             )
             
             db.session.add(new_purchase)
+            db.session.flush()  # Get purchase ID
+            
+            # Process products from form
+            products_data = {}
+            for key, value in request.form.items():
+                if key.startswith('products['):
+                    # Parse products[0][id], products[0][price], etc.
+                    import re
+                    match = re.match(r'products\[(\d+)\]\[(\w+)\]', key)
+                    if match:
+                        index, field = match.groups()
+                        if index not in products_data:
+                            products_data[index] = {}
+                        products_data[index][field] = value
+            
+            # Create purchase items and update inventory
+            for product_data in products_data.values():
+                if not all(k in product_data for k in ['id', 'price', 'quantity', 'tax_rate']):
+                    continue
+                    
+                product_id = int(product_data['id'])
+                quantity = int(product_data['quantity'])
+                unit_price = float(product_data['price'])
+                tax_rate = float(product_data['tax_rate'])
+                
+                # Calculate totals
+                subtotal = quantity * unit_price
+                tax_amount = subtotal * (tax_rate / 100)
+                total_price = subtotal + tax_amount
+                
+                # Create purchase item
+                from models import PurchaseItem
+                purchase_item = PurchaseItem(
+                    purchase_id=new_purchase.id,
+                    product_id=product_id,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    tax_rate=tax_rate,
+                    total_price=total_price
+                )
+                db.session.add(purchase_item)
+                
+                # Update product stock (increase for purchase)
+                from models import Product
+                product = Product.query.get(product_id)
+                if product:
+                    product.stock_quantity += quantity
+                    product.updated_at = datetime.now()
+                    
+                    # Create inventory movement
+                    from models import InventoryMovement
+                    movement = InventoryMovement(
+                        product_id=product_id,
+                        movement_type='entrada',
+                        quantity=quantity,
+                        reference_type='compra',
+                        reference_id=new_purchase.id,
+                        notes=f'Compra {invoice_number}',
+                        user_id=session['user_id'],
+                        created_at=datetime.now()
+                    )
+                    db.session.add(movement)
+            
             db.session.commit()
             
             flash('Compra registada com sucesso!', 'success')
@@ -786,7 +849,18 @@ def add_purchase():
     except Exception as e:
         print(f"Error loading suppliers: {e}")
     
-    return render_template('forms/add_purchase.html', suppliers=suppliers, today=datetime.now().strftime('%Y-%m-%d'))
+    # Get products for selection
+    products = []
+    try:
+        from models import Product
+        products = Product.query.filter_by(is_active=True).all()
+    except Exception as e:
+        print(f"Error loading products: {e}")
+    
+    return render_template('forms/advanced_purchase.html', 
+                         suppliers=suppliers, 
+                         products=products,
+                         today=datetime.now().strftime('%Y-%m-%d'))
 
 # Add Inventory Movement
 @app.route('/inventory/add', methods=['GET', 'POST'])

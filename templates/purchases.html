@@ -34,16 +34,16 @@
                     {% for purchase in purchases.data %}
                         <tr>
                             <td><code>{{ purchase.invoice_number }}</code></td>
-                            <td>Fornecedor #{{ purchase.supplier_id }}</td>
+                            <td>{{ purchase.supplier.name if purchase.supplier else 'Fornecedor #' + purchase.supplier_id|string }}</td>
                             <td>{{ purchase.purchase_date.strftime('%d/%m/%Y') if purchase.purchase_date else 'N/A' }}</td>
                             <td><strong>{{ format_currency(purchase.total_amount) }}</strong></td>
                             <td>
                                 <span class="badge bg-info">{{ purchase.status|title if purchase.status else 'Pendente' }}</span>
                             </td>
                             <td>
-                                <a href="{{ url_for('edit_purchase', id=purchase.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                                <button class="btn btn-sm btn-outline-secondary" disabled title="Edição em desenvolvimento">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                                 <a href="{{ url_for('delete_purchase', id=purchase.id) }}" 
                                    class="btn btn-sm btn-outline-danger"
                                    onclick="return confirm('Tem certeza que deseja eliminar esta compra?')">

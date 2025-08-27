@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Compra - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-shopping-bag me-2"></i>Nova Compra</h2>
+    <a href="{{ url_for('purchases') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<form method="POST" action="{{ url_for('add_purchase') }}">
+    <div class="row">
+        <!-- Purchase Information -->
+        <div class="col-lg-8">
+            <div class="data-card mb-4">
+                <div class="header">
+                    <h5><i class="fas fa-info-circle me-2"></i>Informações da Compra</h5>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="supplier_id" class="form-label">Fornecedor</label>
+                            <select class="form-select" id="supplier_id" name="supplier_id" required>
+                                <option value="">Selecione um fornecedor</option>
+                                {% for supplier in suppliers %}
+                                <option value="{{ supplier.id }}" 
+                                        data-email="{{ supplier.email }}"
+                                        data-phone="{{ supplier.phone }}"
+                                        data-city="{{ supplier.city }}">
+                                    {{ supplier.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Supplier Information Display -->
+                        <div id="supplierInfo" class="alert alert-info" style="display: none;">
+                            <h6><i class="fas fa-truck me-2"></i>Informações do Fornecedor</h6>
+                            <div id="supplierDetails"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="purchase_date" class="form-label">Data da Compra</label>
+                            <input type="date" class="form-control" id="purchase_date" name="purchase_date" 
+                                   value="{{ today }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Método de Pagamento</label>
+                            <select class="form-select" id="payment_method" name="payment_method">
+                                <option value="">Selecione o método</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="multibanco">Multibanco</option>
+                                <option value="transferencia">Transferência</option>
+                                <option value="cheque">Cheque</option>
+                                <option value="credito">A Crédito</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Observações sobre a compra..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Products Section -->
+            <div class="data-card">
+                <div class="header">
+                    <h5><i class="fas fa-boxes me-2"></i>Produtos</h5>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="addProductRow()">
+                        <i class="fas fa-plus me-1"></i>Adicionar Produto
+                    </button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Preço Unitário</th>
+                                <th>Quantidade</th>
+                                <th>Taxa IVA (%)</th>
+                                <th>Total</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productRows">
+                            <!-- Products will be added here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="emptyProductsMessage" class="text-center py-4 text-muted">
+                    <i class="fas fa-box-open fa-2x mb-2"></i>
+                    <p>Nenhum produto adicionado. Clique em "Adicionar Produto" para começar.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Purchase Summary -->
+        <div class="col-lg-4">
+            <div class="data-card sticky-top">
+                <div class="header">
+                    <h5><i class="fas fa-calculator me-2"></i>Resumo da Compra</h5>
+                </div>
+                
+                <div class="purchase-summary">
+                    <div class="summary-row">
+                        <span>Subtotal (s/ IVA):</span>
+                        <span id="subtotalDisplay">0,00 €</span>
+                        <input type="hidden" name="subtotal" id="subtotal" value="0.00">
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>IVA Total:</span>
+                        <span id="taxDisplay">0,00 €</span>
+                        <input type="hidden" name="tax_amount" id="tax_amount" value="0.00">
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="summary-row total-row">
+                        <span><strong>Total (c/ IVA):</strong></span>
+                        <span id="totalDisplay"><strong>0,00 €</strong></span>
+                        <input type="hidden" name="total_amount" id="total_amount" value="0.00">
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success w-100" id="submitBtn" disabled>
+                        <i class="fas fa-check me-2"></i>Registar Compra
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Product Selection Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-search me-2"></i>Selecionar Produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="productSearch" 
+                           placeholder="Pesquisar produto por nome ou código...">
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Produto</th>
+                                <th>Categoria</th>
+                                <th>Preço Compra</th>
+                                <th>Stock</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr data-product-id="{{ product.id }}"
+                                data-product-name="{{ product.name }}"
+                                data-product-code="{{ product.code }}"
+                                data-product-price="{{ product.purchase_price or product.sale_price * 0.7 }}"
+                                data-product-stock="{{ product.stock_quantity }}"
+                                data-product-tax="{{ product.tax_rate or 23 }}">
+                                <td><code>{{ product.code }}</code></td>
+                                <td>
+                                    <strong>{{ product.name }}</strong>
+                                    {% if product.description %}
+                                        <br><small class="text-muted">{{ product.description[:40] }}...</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ product.category.name }}</td>
+                                <td>{{ format_currency(product.purchase_price or product.sale_price * 0.7) }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if product.stock_quantity > 10 else 'warning' if product.stock_quantity > 0 else 'danger' }}">
+                                        {{ product.stock_quantity }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary" 
+                                            onclick="selectProduct(this)">
+                                        <i class="fas fa-plus"></i> Selecionar
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRowIndex = 0;
+
+// Supplier selection handling
+document.getElementById('supplier_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const supplierInfo = document.getElementById('supplierInfo');
+    const supplierDetails = document.getElementById('supplierDetails');
+    
+    if (this.value) {
+        const email = selectedOption.dataset.email;
+        const phone = selectedOption.dataset.phone;
+        const city = selectedOption.dataset.city;
+        
+        let details = selectedOption.text;
+        if (email) details += `<br>Email: ${email}`;
+        if (phone) details += `<br>Telefone: ${phone}`;
+        if (city) details += `<br>Cidade: ${city}`;
+        
+        supplierDetails.innerHTML = details;
+        supplierInfo.style.display = 'block';
+    } else {
+        supplierInfo.style.display = 'none';
+    }
+});
+
+// Add product row
+function addProductRow() {
+    document.getElementById('productModal').querySelector('[data-bs-dismiss="modal"]').click = null;
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+
+// Select product from modal
+function selectProduct(button) {
+    const row = button.closest('tr');
+    const productId = row.dataset.productId;
+    const productName = row.dataset.productName;
+    const productCode = row.dataset.productCode;
+    const productPrice = parseFloat(row.dataset.productPrice);
+    const productStock = parseInt(row.dataset.productStock);
+    const productTax = parseFloat(row.dataset.productTax);
+    
+    console.log('Selecting product for purchase:', productId, productName);
+    
+    // Check if product already exists in the products table
+    const productTableBody = document.getElementById('productRows');
+    const existingRows = productTableBody.querySelectorAll('tr[data-product-id]');
+    let productExists = false;
+    
+    existingRows.forEach(existingRow => {
+        if (existingRow.dataset.productId === productId) {
+            productExists = true;
+        }
+    });
+    
+    if (productExists) {
+        alert('Este produto já foi adicionado à compra.');
+        return;
+    }
+    
+    const tbody = document.getElementById('productRows');
+    const newRow = document.createElement('tr');
+    newRow.setAttribute('data-product-id', productId);
+    newRow.innerHTML = `
+        <td>
+            <strong>${productCode}</strong><br>
+            <small class="text-muted">${productName}</small>
+            <input type="hidden" name="products[${currentRowIndex}][id]" value="${productId}">
+        </td>
+        <td>
+            <input type="number" class="form-control" step="0.01" min="0" 
+                   name="products[${currentRowIndex}][price]" value="${productPrice.toFixed(2)}" 
+                   onchange="calculateRowTotal(this)" required>
+        </td>
+        <td>
+            <input type="number" class="form-control" min="1" 
+                   name="products[${currentRowIndex}][quantity]" value="1" 
+                   onchange="calculateRowTotal(this)" required>
+        </td>
+        <td>
+            <input type="number" class="form-control" step="0.01" min="0" max="100" 
+                   name="products[${currentRowIndex}][tax_rate]" value="${productTax}" 
+                   onchange="calculateRowTotal(this)" required>
+        </td>
+        <td>
+            <span class="row-total">€${productPrice.toFixed(2)}</span>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeProductRow(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(newRow);
+    currentRowIndex++;
+    
+    // Hide empty message
+    document.getElementById('emptyProductsMessage').style.display = 'none';
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+    
+    // Recalculate totals
+    calculatePurchaseTotal();
+}
+
+// Remove product row
+function removeProductRow(button) {
+    button.closest('tr').remove();
+    
+    // Show empty message if no products
+    const tbody = document.getElementById('productRows');
+    if (tbody.children.length === 0) {
+        document.getElementById('emptyProductsMessage').style.display = 'block';
+    }
+    
+    calculatePurchaseTotal();
+}
+
+// Calculate row total
+function calculateRowTotal(input) {
+    const row = input.closest('tr');
+    const price = parseFloat(row.querySelector('input[name*="[price]"]').value) || 0;
+    const quantity = parseInt(row.querySelector('input[name*="[quantity]"]').value) || 0;
+    const taxRate = parseFloat(row.querySelector('input[name*="[tax_rate]"]').value) || 0;
+    
+    const subtotal = price * quantity;
+    const taxAmount = subtotal * (taxRate / 100);
+    const total = subtotal + taxAmount;
+    
+    row.querySelector('.row-total').textContent = `€${total.toFixed(2)}`;
+    
+    calculatePurchaseTotal();
+}
+
+// Calculate purchase total
+function calculatePurchaseTotal() {
+    let subtotal = 0;
+    let totalTax = 0;
+    
+    const rows = document.querySelectorAll('#productRows tr[data-product-id]');
+    rows.forEach(row => {
+        const price = parseFloat(row.querySelector('input[name*="[price]"]').value) || 0;
+        const quantity = parseInt(row.querySelector('input[name*="[quantity]"]').value) || 0;
+        const taxRate = parseFloat(row.querySelector('input[name*="[tax_rate]"]').value) || 0;
+        
+        const rowSubtotal = price * quantity;
+        const rowTax = rowSubtotal * (taxRate / 100);
+        
+        subtotal += rowSubtotal;
+        totalTax += rowTax;
+    });
+    
+    const total = subtotal + totalTax;
+    
+    // Update displays
+    document.getElementById('subtotalDisplay').textContent = `${subtotal.toFixed(2)} €`;
+    document.getElementById('taxDisplay').textContent = `${totalTax.toFixed(2)} €`;
+    document.getElementById('totalDisplay').innerHTML = `<strong>${total.toFixed(2)} €</strong>`;
+    
+    // Update hidden inputs
+    document.getElementById('subtotal').value = subtotal.toFixed(2);
+    document.getElementById('tax_amount').value = totalTax.toFixed(2);
+    document.getElementById('total_amount').value = total.toFixed(2);
+    
+    // Enable/disable submit button
+    document.getElementById('submitBtn').disabled = rows.length === 0;
+}
+
+// Product search functionality
+document.getElementById('productSearch').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#productModal tbody tr');
+    
+    rows.forEach(row => {
+        const productName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const productCode = row.querySelector('code').textContent.toLowerCase();
+        
+        if (productName.includes(searchTerm) || productCode.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Set today's date as default
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('purchase_date').value = today;
+});
+</script>
+
+<style>
+.purchase-summary {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+}
+
+.total-row {
+    border-top: 2px solid #28a745;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.sticky-top {
+    top: 2rem;
+}
+
+#emptyProductsMessage {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+    margin: 1rem;
+}
+</style>
+{% endblock %}
