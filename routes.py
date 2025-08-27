@@ -438,3 +438,153 @@ def inject_utils():
         'current_username': session.get('username'),
         'current_user_role': session.get('user_role')
     }
+
+# Analytics route
+@app.route('/analytics')
+def analytics():
+    if not login_required():
+        return redirect(url_for('login'))
+    
+    try:
+        from models import Sale, Product, Purchase, Customer, SaleItem, PurchaseItem, Category
+        from datetime import datetime, timedelta
+        from sqlalchemy import func
+        
+        # Calculate analytics data
+        now = datetime.now()
+        last_30_days = now - timedelta(days=30)
+        last_60_days = now - timedelta(days=60)
+        
+        # Revenue growth calculation
+        current_revenue = db.session.query(func.sum(Sale.total_amount)).filter(
+            Sale.created_at >= last_30_days
+        ).scalar() or 0
+        
+        previous_revenue = db.session.query(func.sum(Sale.total_amount)).filter(
+            Sale.created_at >= last_60_days,
+            Sale.created_at < last_30_days
+        ).scalar() or 0
+        
+        revenue_growth = ((current_revenue - previous_revenue) / previous_revenue * 100) if previous_revenue > 0 else 0
+        
+        # Average order value
+        recent_sales = Sale.query.filter(Sale.created_at >= last_30_days).all()
+        avg_order_value = (sum(sale.total_amount for sale in recent_sales) / len(recent_sales)) if recent_sales else 0
+        
+        # Profit margin calculation
+        total_revenue = sum(sale.total_amount for sale in recent_sales)
+        total_purchase_costs = db.session.query(func.sum(Purchase.total_amount)).filter(
+            Purchase.created_at >= last_30_days
+        ).scalar() or 0
+        
+        profit_margin = ((total_revenue - total_purchase_costs) / total_revenue * 100) if total_revenue > 0 else 0
+        
+        # Inventory turnover (simplified)
+        total_products = Product.query.count()
+        sold_products = db.session.query(func.sum(SaleItem.quantity)).join(Sale).filter(
+            Sale.created_at >= last_30_days
+        ).scalar() or 0
+        inventory_turnover = (sold_products / total_products * 12) if total_products > 0 else 0
+        
+        # Revenue vs Purchase data for chart (last 7 days)
+        revenue_labels = []
+        revenue_data = []
+        purchase_data = []
+        
+        for i in range(7):
+            date = now - timedelta(days=6-i)
+            day_label = date.strftime('%d/%m')
+            revenue_labels.append(day_label)
+            
+            day_revenue = db.session.query(func.sum(Sale.total_amount)).filter(
+                func.date(Sale.created_at) == date.date()
+            ).scalar() or 0
+            revenue_data.append(float(day_revenue))
+            
+            day_purchases = db.session.query(func.sum(Purchase.total_amount)).filter(
+                func.date(Purchase.created_at) == date.date()
+            ).scalar() or 0
+            purchase_data.append(float(day_purchases))
+        
+        # Category sales distribution
+        category_sales = db.session.query(
+            Category.name,
+            func.sum(SaleItem.total_price)
+        ).join(Product).join(SaleItem).join(Sale).filter(
+            Sale.created_at >= last_30_days
+        ).group_by(Category.name).all()
+        
+        category_labels = [item[0] for item in category_sales]
+        category_data = [float(item[1]) for item in category_sales]
+        
+        # Top products by sales
+        top_products = db.session.query(
+            Product.name,
+            func.sum(SaleItem.total_price)
+        ).join(SaleItem).join(Sale).filter(
+            Sale.created_at >= last_30_days
+        ).group_by(Product.name).order_by(
+            func.sum(SaleItem.total_price).desc()
+        ).limit(5).all()
+        
+        top_products_labels = [item[0] for item in top_products]
+        top_products_data = [float(item[1]) for item in top_products]
+        
+        # Margin analysis (volume vs margin)
+        margin_analysis = []
+        for product in Product.query.all():
+            volume = db.session.query(func.sum(SaleItem.quantity)).filter(
+                SaleItem.product_id == product.id
+            ).scalar() or 0
+            margin = product.profit_margin
+            if volume > 0:
+                margin_analysis.append({'x': volume, 'y': margin})
+        
+        # Top customers
+        top_customers = db.session.query(
+            Customer.name,
+            func.count(Sale.id).label('sales_count'),
+            func.sum(Sale.total_amount).label('total_amount')
+        ).join(Sale).filter(
+            Sale.created_at >= last_30_days
+        ).group_by(Customer.id, Customer.name).order_by(
+            func.sum(Sale.total_amount).desc()
+        ).limit(5).all()
+        
+        # Stock alerts
+        stock_alerts = Product.query.filter(
+            Product.stock_quantity <= Product.min_stock
+        ).all()
+        
+        # Financial totals
+        total_costs = float(total_purchase_costs)
+        gross_profit = float(total_revenue - total_costs)
+        roi = (gross_profit / total_costs * 100) if total_costs > 0 else 0
+        
+        analytics_data = {
+            'revenue_growth': round(revenue_growth, 1),
+            'profit_margin': round(profit_margin, 1),
+            'avg_order_value': float(avg_order_value),
+            'inventory_turnover': round(inventory_turnover, 1),
+            'revenue_labels': revenue_labels,
+            'revenue_data': revenue_data,
+            'purchase_data': purchase_data,
+            'category_labels': category_labels,
+            'category_data': category_data,
+            'top_products_labels': top_products_labels,
+            'top_products_data': top_products_data,
+            'margin_analysis': margin_analysis,
+            'top_customers': [{'name': c[0], 'sales_count': c[1], 'total_amount': float(c[2])} for c in top_customers],
+            'stock_alerts': stock_alerts,
+            'total_revenue': float(total_revenue),
+            'total_costs': total_costs,
+            'gross_profit': gross_profit,
+            'roi': round(roi, 1)
+        }
+        
+        return render_template('analytics.html', analytics=analytics_data)
+        
+    except Exception as e:
+        print(f"Error in analytics: {e}")
+        flash('Erro ao carregar análises.', 'error')
+        return redirect(url_for('dashboard'))

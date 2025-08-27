@@ -1106,6 +1106,8 @@ def register():
     
     return render_template('register.html')
 
+
+
 @app.route('/confirm-email/<token>')
 def confirm_email(token):
     try:
