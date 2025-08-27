@@ -3,100 +3,410 @@
 {% block title %}Relatórios - GestVendas{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-chart-bar me-2"></i>Relatórios</h2>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-bar me-2"></i>Relatórios</h2>
+        <div class="d-flex gap-2">
+            <select id="periodFilter" class="form-select" style="width: auto;">
+                <option value="7">Últimos 7 dias</option>
+                <option value="30" selected>Últimos 30 dias</option>
+                <option value="90">Últimos 90 dias</option>
+                <option value="365">Último ano</option>
+            </select>
+            <button class="btn btn-primary" onclick="refreshReports()">
+                <i class="fas fa-sync-alt me-1"></i>Atualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Total de Vendas</h6>
+                            <h4 class="card-title text-success">€{{ "%.2f"|format(total_sales or 0) }}</h4>
+                        </div>
+                        <div class="card-icon bg-success">
+                            <i class="fas fa-euro-sign"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ sales_count or 0 }} transações</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Total de Compras</h6>
+                            <h4 class="card-title text-danger">€{{ "%.2f"|format(total_purchases or 0) }}</h4>
+                        </div>
+                        <div class="card-icon bg-danger">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ purchases_count or 0 }} transações</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Lucro Bruto</h6>
+                            <h4 class="card-title text-primary">€{{ "%.2f"|format((total_sales or 0) - (total_purchases or 0)) }}</h4>
+                        </div>
+                        <div class="card-icon bg-primary">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Margem: {{ "%.1f"|format(((total_sales or 0) - (total_purchases or 0)) / (total_sales or 1) * 100) }}%</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Produtos Ativos</h6>
+                            <h4 class="card-title text-info">{{ products_count or 0 }}</h4>
+                        </div>
+                        <div class="card-icon bg-info">
+                            <i class="fas fa-box"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ low_stock_count or 0 }} com stock baixo</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Tabs -->
+    <div class="data-card">
+        <ul class="nav nav-tabs" id="reportsTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales-report" type="button" role="tab">
+                    <i class="fas fa-chart-line me-1"></i>Relatório de Vendas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products-report" type="button" role="tab">
+                    <i class="fas fa-box me-1"></i>Relatório de Produtos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases-report" type="button" role="tab">
+                    <i class="fas fa-shopping-bag me-1"></i>Relatório de Compras
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="financial-tab" data-bs-toggle="tab" data-bs-target="#financial-report" type="button" role="tab">
+                    <i class="fas fa-calculator me-1"></i>Relatório Financeiro
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="reportsTabContent">
+            <!-- Sales Report -->
+            <div class="tab-pane fade show active" id="sales-report" role="tabpanel">
+                <div class="p-3">
+                    <h5><i class="fas fa-chart-line me-2"></i>Relatório de Vendas</h5>
+                    
+                    {% if recent_sales %}
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="salesTable">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Fatura Nº</th>
+                                    <th>Cliente</th>
+                                    <th>Produtos</th>
+                                    <th>Subtotal</th>
+                                    <th>IVA</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in recent_sales %}
+                                <tr>
+                                    <td>{{ sale.sale_date.strftime('%d/%m/%Y') if sale.sale_date else 'N/A' }}</td>
+                                    <td><strong>{{ sale.invoice_number or '#' + sale.id|string }}</strong></td>
+                                    <td>{{ sale.customer.name if sale.customer else 'Cliente Direto' }}</td>
+                                    <td>{{ sale.sale_items|length if sale.sale_items else 0 }} item(s)</td>
+                                    <td>€{{ "%.2f"|format(sale.subtotal or 0) }}</td>
+                                    <td>€{{ "%.2f"|format(sale.tax_amount or 0) }}</td>
+                                    <td><strong>€{{ "%.2f"|format(sale.total_amount or 0) }}</strong></td>
+                                    <td>
+                                        <span class="badge bg-success">Concluída</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h5>Sem vendas no período selecionado</h5>
+                        <p class="text-muted">Comece a registar vendas para ver os relatórios aqui.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Products Report -->
+            <div class="tab-pane fade" id="products-report" role="tabpanel">
+                <div class="p-3">
+                    <h5><i class="fas fa-box me-2"></i>Relatório de Produtos</h5>
+                    
+                    {% if top_products %}
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Categoria</th>
+                                    <th>Preço de Venda</th>
+                                    <th>Stock Atual</th>
+                                    <th>Vendas (Unidades)</th>
+                                    <th>Receita Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in top_products %}
+                                <tr>
+                                    <td><strong>{{ product.name }}</strong></td>
+                                    <td>{{ product.category.name if product.category else 'Sem categoria' }}</td>
+                                    <td>€{{ "%.2f"|format(product.sale_price or 0) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'danger' if product.stock_quantity <= (product.min_stock or 0) else 'success' }}">
+                                            {{ product.stock_quantity or 0 }}
+                                        </span>
+                                    </td>
+                                    <td>{{ product.sales_count or 0 }}</td>
+                                    <td>€{{ "%.2f"|format(product.total_revenue or 0) }}</td>
+                                    <td>
+                                        {% if product.stock_quantity <= (product.min_stock or 0) %}
+                                            <span class="badge bg-warning">Stock Baixo</span>
+                                        {% else %}
+                                            <span class="badge bg-success">OK</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                        <h5>Nenhum produto encontrado</h5>
+                        <p class="text-muted">Adicione produtos para ver os relatórios aqui.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Purchases Report -->
+            <div class="tab-pane fade" id="purchases-report" role="tabpanel">
+                <div class="p-3">
+                    <h5><i class="fas fa-shopping-bag me-2"></i>Relatório de Compras</h5>
+                    
+                    {% if recent_purchases %}
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="purchasesTable">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Referência</th>
+                                    <th>Fornecedor</th>
+                                    <th>Produtos</th>
+                                    <th>Subtotal</th>
+                                    <th>IVA</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for purchase in recent_purchases %}
+                                <tr>
+                                    <td>{{ purchase.purchase_date.strftime('%d/%m/%Y') if purchase.purchase_date else 'N/A' }}</td>
+                                    <td><strong>{{ purchase.reference_number or '#' + purchase.id|string }}</strong></td>
+                                    <td>{{ purchase.supplier.name if purchase.supplier else 'Fornecedor Direto' }}</td>
+                                    <td>{{ purchase.purchase_items|length if purchase.purchase_items else 0 }} item(s)</td>
+                                    <td>€{{ "%.2f"|format(purchase.subtotal or 0) }}</td>
+                                    <td>€{{ "%.2f"|format(purchase.tax_amount or 0) }}</td>
+                                    <td><strong>€{{ "%.2f"|format(purchase.total_amount or 0) }}</strong></td>
+                                    <td>
+                                        <span class="badge bg-info">Recebida</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                        <h5>Sem compras no período selecionado</h5>
+                        <p class="text-muted">Registe compras para ver os relatórios aqui.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Financial Report -->
+            <div class="tab-pane fade" id="financial-report" role="tabpanel">
+                <div class="p-3">
+                    <h5><i class="fas fa-calculator me-2"></i>Relatório Financeiro</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-chart-pie me-1"></i>Resumo Financeiro</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Receitas (Vendas)</strong></td>
+                                            <td class="text-end text-success"><strong>€{{ "%.2f"|format(total_sales or 0) }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Custos (Compras)</strong></td>
+                                            <td class="text-end text-danger"><strong>€{{ "%.2f"|format(total_purchases or 0) }}</strong></td>
+                                        </tr>
+                                        <tr class="table-active">
+                                            <td><strong>Lucro Bruto</strong></td>
+                                            <td class="text-end"><strong>€{{ "%.2f"|format((total_sales or 0) - (total_purchases or 0)) }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Margem de Lucro</td>
+                                            <td class="text-end">{{ "%.1f"|format(((total_sales or 0) - (total_purchases or 0)) / (total_sales or 1) * 100) }}%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>IVA a Pagar</td>
+                                            <td class="text-end">€{{ "%.2f"|format(total_tax or 0) }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-chart-bar me-1"></i>Análise de Performance</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td>Venda Média</td>
+                                            <td class="text-end">€{{ "%.2f"|format((total_sales or 0) / (sales_count or 1)) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Compra Média</td>
+                                            <td class="text-end">€{{ "%.2f"|format((total_purchases or 0) / (purchases_count or 1)) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Produtos com Stock Baixo</td>
+                                            <td class="text-end {{ 'text-warning' if low_stock_count > 0 else 'text-success' }}">{{ low_stock_count or 0 }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Clientes Ativos</td>
+                                            <td class="text-end">{{ customers_count or 0 }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Fornecedores Ativos</td>
+                                            <td class="text-end">{{ suppliers_count or 0 }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if financial_data %}
+                    <div class="mt-4">
+                        <canvas id="financialChart" width="400" height="200"></canvas>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Report Cards -->
-<div class="row">
-    <div class="col-md-6 mb-4">
-        <div class="data-card">
-            <div class="header">
-                <h5><i class="fas fa-shopping-cart me-2"></i>Relatórios de Vendas</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-calendar-day me-2"></i>Vendas por Dia
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-calendar-week me-2"></i>Vendas por Semana
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-calendar-alt me-2"></i>Vendas por Mês
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-users me-2"></i>Vendas por Cliente
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6 mb-4">
-        <div class="data-card">
-            <div class="header">
-                <h5><i class="fas fa-box me-2"></i>Relatórios de Produtos</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-star me-2"></i>Produtos Mais Vendidos
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-warehouse me-2"></i>Estado do Stock
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Stock Baixo
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-chart-line me-2"></i>Valorização do Stock
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6 mb-4">
-        <div class="data-card">
-            <div class="header">
-                <h5><i class="fas fa-shopping-bag me-2"></i>Relatórios de Compras</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-truck me-2"></i>Compras por Fornecedor
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-calendar-alt me-2"></i>Compras por Período
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-euro-sign me-2"></i>Valor das Compras
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6 mb-4">
-        <div class="data-card">
-            <div class="header">
-                <h5><i class="fas fa-chart-pie me-2"></i>Relatórios Financeiros</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-money-bill me-2"></i>Resumo Financeiro
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-percentage me-2"></i>Margem de Lucro
-                    </button>
-                    <button class="list-group-item list-group-item-action" onclick="alert('Relatório em desenvolvimento')">
-                        <i class="fas fa-receipt me-2"></i>IVA a Pagar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<script>
+function refreshReports() {
+    const period = document.getElementById('periodFilter').value;
+    window.location.href = `{{ url_for('reports') }}?period=${period}`;
+}
+
+// Initialize DataTables
+$(document).ready(function() {
+    $('#salesTable, #productsTable, #purchasesTable').DataTable({
+        "pageLength": 10,
+        "ordering": true,
+        "searching": true,
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.13.5/i18n/pt.json"
+        }
+    });
+});
+
+// Financial Chart
+{% if financial_data %}
+const ctx = document.getElementById('financialChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ financial_data.labels | tojson }},
+        datasets: [{
+            label: 'Vendas',
+            data: {{ financial_data.sales | tojson }},
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.1
+        }, {
+            label: 'Compras',
+            data: {{ financial_data.purchases | tojson }},
+            borderColor: '#dc3545',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Evolução Financeira'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '€' + value.toFixed(2);
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
 {% endblock %}

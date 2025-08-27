@@ -342,7 +342,103 @@ def reports():
     if not session.get('user_id'):
         return redirect(url_for('login'))
     
-    return render_template('reports.html')
+    from models import Sale, Purchase, Product, Customer, Supplier, SaleItem, PurchaseItem
+    from datetime import datetime, timedelta
+    from sqlalchemy import func, desc
+    
+    try:
+        # Get period filter (default 30 days)
+        period_days = int(request.args.get('period', 30))
+        start_date = datetime.now() - timedelta(days=period_days)
+        
+        # Sales data
+        sales_query = Sale.query.filter(Sale.sale_date >= start_date)
+        recent_sales = sales_query.order_by(desc(Sale.sale_date)).limit(20).all()
+        sales_count = sales_query.count()
+        total_sales = sales_query.with_entities(func.sum(Sale.total_amount)).scalar() or 0
+        
+        # Purchases data
+        purchases_query = Purchase.query.filter(Purchase.purchase_date >= start_date)
+        recent_purchases = purchases_query.order_by(desc(Purchase.purchase_date)).limit(20).all()
+        purchases_count = purchases_query.count()
+        total_purchases = purchases_query.with_entities(func.sum(Purchase.total_amount)).scalar() or 0
+        
+        # Products data with sales performance
+        products_with_stats = db.session.query(
+            Product,
+            func.coalesce(func.sum(SaleItem.quantity), 0).label('sales_count'),
+            func.coalesce(func.sum(SaleItem.quantity * SaleItem.unit_price), 0).label('total_revenue')
+        ).outerjoin(SaleItem).outerjoin(Sale).filter(
+            func.coalesce(Sale.sale_date, datetime.now()) >= start_date
+        ).group_by(Product.id).order_by(desc('total_revenue')).limit(20).all()
+        
+        # Format products data
+        top_products = []
+        for product, sales_count, total_revenue in products_with_stats:
+            product.sales_count = sales_count
+            product.total_revenue = total_revenue
+            top_products.append(product)
+        
+        # General stats
+        products_count = Product.query.count()
+        low_stock_count = Product.query.filter(
+            Product.stock_quantity <= Product.min_stock
+        ).count()
+        customers_count = Customer.query.count()
+        suppliers_count = Supplier.query.count()
+        
+        # Tax calculations
+        total_tax = (sales_query.with_entities(func.sum(Sale.tax_amount)).scalar() or 0) - \
+                   (purchases_query.with_entities(func.sum(Purchase.tax_amount)).scalar() or 0)
+        
+        # Financial chart data (last 7 days)
+        financial_data = None
+        if period_days <= 30:
+            chart_days = min(period_days, 7)
+            labels = []
+            sales_data = []
+            purchases_data = []
+            
+            for i in range(chart_days):
+                day = datetime.now() - timedelta(days=chart_days - 1 - i)
+                labels.append(day.strftime('%d/%m'))
+                
+                day_sales = Sale.query.filter(
+                    func.date(Sale.sale_date) == day.date()
+                ).with_entities(func.sum(Sale.total_amount)).scalar() or 0
+                
+                day_purchases = Purchase.query.filter(
+                    func.date(Purchase.purchase_date) == day.date()
+                ).with_entities(func.sum(Purchase.total_amount)).scalar() or 0
+                
+                sales_data.append(float(day_sales))
+                purchases_data.append(float(day_purchases))
+            
+            financial_data = {
+                'labels': labels,
+                'sales': sales_data,
+                'purchases': purchases_data
+            }
+        
+        return render_template('reports.html',
+                             recent_sales=recent_sales,
+                             recent_purchases=recent_purchases,
+                             top_products=top_products,
+                             total_sales=total_sales,
+                             total_purchases=total_purchases,
+                             sales_count=sales_count,
+                             purchases_count=purchases_count,
+                             products_count=products_count,
+                             low_stock_count=low_stock_count,
+                             customers_count=customers_count,
+                             suppliers_count=suppliers_count,
+                             total_tax=total_tax,
+                             financial_data=financial_data)
+    
+    except Exception as e:
+        print(f"Error generating reports: {e}")
+        flash('Erro ao gerar relatórios.', 'error')
+        return redirect(url_for('dashboard'))
 
 # Analytics routes  
 @app.route('/analytics')
