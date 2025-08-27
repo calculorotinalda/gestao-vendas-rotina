@@ -92,6 +92,12 @@
             </div>
             
             <div class="sidebar-heading">Sistema</div>
+            {% if session.user_role == 'admin' %}
+            <div class="sidebar-item {{ 'active' if request.endpoint == 'admin_activate_users' }}" onclick="window.location.href='{{ url_for('admin_activate_users') }}'">
+                <i class="fas fa-user-cog"></i>
+                <span class="text">Gerir Utilizadores</span>
+            </div>
+            {% endif %}
             <div class="sidebar-item" onclick="window.location.href='/setup-db'">
                 <i class="fas fa-cogs"></i>
                 <span class="text">Configurar Base de Dados</span>

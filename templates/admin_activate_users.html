@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Ativar Utilizadores - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-user-check me-2"></i>Ativar Utilizadores</h2>
+</div>
+
+<div class="data-card">
+    <div class="header">
+        <h5><i class="fas fa-users me-2"></i>Utilizadores Pendentes de Ativação</h5>
+    </div>
+    
+    {% if pending_users %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome de Utilizador</th>
+                        <th>Email</th>
+                        <th>Nome Completo</th>
+                        <th>Data de Registo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in pending_users %}
+                        <tr>
+                            <td><strong>{{ user.username }}</strong></td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.full_name }}</td>
+                            <td>{{ user.created_at.strftime('%d/%m/%Y %H:%M') if user.created_at else 'N/A' }}</td>
+                            <td>
+                                <a href="{{ url_for('admin_activate_user', id=user.id) }}" 
+                                   class="btn btn-sm btn-success"
+                                   onclick="return confirm('Ativar este utilizador?')">
+                                    <i class="fas fa-check me-1"></i>Ativar
+                                </a>
+                                <a href="{{ url_for('delete_user', id=user.id) }}" 
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Eliminar este utilizador?')">
+                                    <i class="fas fa-trash me-1"></i>Eliminar
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-user-check fa-3x text-muted mb-3"></i>
+            <h5>Não há utilizadores pendentes</h5>
+            <p class="text-muted">Todos os utilizadores registados estão ativos.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="data-card mt-4">
+    <div class="header">
+        <h5><i class="fas fa-users me-2"></i>Todos os Utilizadores</h5>
+    </div>
+    
+    {% if all_users %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome de Utilizador</th>
+                        <th>Email</th>
+                        <th>Nome Completo</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Data de Registo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in all_users %}
+                        <tr>
+                            <td><strong>{{ user.username }}</strong></td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.full_name }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'primary' if user.role == 'admin' else 'secondary' }}">
+                                    {{ user.role|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pendente</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.created_at.strftime('%d/%m/%Y %H:%M') if user.created_at else 'N/A' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

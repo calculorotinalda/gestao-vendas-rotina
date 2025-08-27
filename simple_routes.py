@@ -857,7 +857,11 @@ def register():
             if email_sent:
                 flash('Registo realizado com sucesso! Verifique o seu email para confirmar a conta.', 'success')
             else:
-                flash('Registo realizado com sucesso! Nota: Email de confirmação não pôde ser enviado. Contacte o administrador para ativar a conta.', 'warning')
+                # For now, auto-activate accounts when email can't be sent
+                new_user.is_active = True
+                new_user.confirmation_token = None
+                db.session.commit()
+                flash('Registo realizado com sucesso! A sua conta foi ativada automaticamente. Pode fazer login agora.', 'success')
             return redirect(url_for('login'))
             
         except Exception as e:
@@ -904,6 +908,14 @@ def send_confirmation_email(email, full_name, token):
             print("SendGrid API key not configured - email not sent")
             return False
         
+        # Use the user's verified email as sender (single sender verification)
+        # For production, configure a verified domain or single sender in SendGrid
+        verified_sender = os.environ.get('VERIFIED_SENDER_EMAIL', 'admin@gestvendas.com')
+        
+        print(f"Attempting to send email to: {email}")
+        print(f"From: {verified_sender}")
+        print(f"Subject: Confirme o seu registo - GestVendas")
+        
         # Create confirmation URL
         base_url = request.url_root
         confirmation_url = f"{base_url}confirm-email/{token}"
@@ -929,10 +941,6 @@ def send_confirmation_email(email, full_name, token):
         </div>
         """
         
-        # Use a verified sender email for SendGrid
-        # You need to verify this email in your SendGrid account
-        verified_sender = 'your-verified-email@domain.com'  # Replace with your verified sender
-        
         message = Mail(
             from_email=verified_sender,
             to_emails=email,
@@ -949,3 +957,74 @@ def send_confirmation_email(email, full_name, token):
     except Exception as e:
         print(f"Error sending email: {e}")
         return False
+
+# Admin routes for user management
+@app.route('/admin/users')
+def admin_activate_users():
+    if not session.get('user_id') or session.get('user_role') != 'admin':
+        flash('Acesso negado. Apenas administradores podem aceder a esta página.', 'error')
+        return redirect(url_for('login'))
+    
+    from models import User
+    
+    try:
+        # Get pending users (not active)
+        pending_users = User.query.filter_by(is_active=False).all()
+        
+        # Get all users
+        all_users = User.query.all()
+        
+        return render_template('admin_activate_users.html', 
+                             pending_users=pending_users,
+                             all_users=all_users)
+    except Exception as e:
+        print(f"Error loading users: {e}")
+        flash('Erro ao carregar utilizadores.', 'error')
+        return redirect(url_for('dashboard'))
+
+@app.route('/admin/activate-user/<int:id>')
+def admin_activate_user(id):
+    if not session.get('user_id') or session.get('user_role') != 'admin':
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('login'))
+    
+    from models import User
+    
+    try:
+        user = User.query.get_or_404(id)
+        user.is_active = True
+        user.confirmation_token = None
+        user.updated_at = datetime.now()
+        
+        db.session.commit()
+        
+        flash(f'Utilizador {user.username} ativado com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error activating user: {e}")
+        flash('Erro ao ativar utilizador.', 'error')
+    
+    return redirect(url_for('admin_activate_users'))
+
+@app.route('/admin/delete-user/<int:id>')
+def delete_user(id):
+    if not session.get('user_id') or session.get('user_role') != 'admin':
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('login'))
+    
+    from models import User
+    
+    try:
+        user = User.query.get_or_404(id)
+        username = user.username
+        
+        db.session.delete(user)
+        db.session.commit()
+        
+        flash(f'Utilizador {username} eliminado com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting user: {e}")
+        flash('Erro ao eliminar utilizador.', 'error')
+    
+    return redirect(url_for('admin_activate_users'))
