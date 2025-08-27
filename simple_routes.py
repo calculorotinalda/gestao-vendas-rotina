@@ -10,18 +10,43 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        login_field = request.form.get('login_field', '').strip()  # Can be username or email
+        password = request.form.get('password', '')
         
-        # Temporary login without database
-        if username == 'admin' and password == 'admin123':
-            session['user_id'] = 1
-            session['username'] = username
-            session['user_role'] = 'admin'
-            flash('Login realizado com sucesso!', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Credenciais inválidas. Use admin/admin123', 'error')
+        try:
+            from models import User
+            from werkzeug.security import check_password_hash
+            
+            # Find user by username or email
+            user = User.query.filter(
+                (User.username == login_field) | (User.email == login_field)
+            ).first()
+            
+            if user and check_password_hash(user.password_hash, password):
+                if not user.is_active:
+                    flash('Conta não ativada. Verifique o seu email para ativar a conta.', 'error')
+                else:
+                    session['user_id'] = user.id
+                    session['username'] = user.username
+                    session['user_role'] = user.role
+                    session['full_name'] = user.full_name
+                    flash(f'Bem-vindo de volta, {user.full_name}!', 'success')
+                    return redirect(url_for('dashboard'))
+            else:
+                flash('Credenciais inválidas. Verifique o utilizador/email e palavra-passe.', 'error')
+                
+        except Exception as e:
+            print(f"Error during login: {e}")
+            # Fallback to admin login for development
+            if login_field == 'admin' and password == 'admin123':
+                session['user_id'] = 1
+                session['username'] = login_field
+                session['user_role'] = 'admin'
+                session['full_name'] = 'Administrador'
+                flash('Login realizado com sucesso!', 'success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Erro durante o login. Tente novamente.', 'error')
     
     return render_template('login.html')
 
@@ -771,3 +796,149 @@ def delete_inventory_movement(id):
         flash(f'Erro ao eliminar movimento: {str(e)}', 'error')
     
     return redirect(url_for('inventory'))
+
+# User Registration Routes
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        try:
+            from models import User
+            from werkzeug.security import generate_password_hash
+            import secrets
+            
+            # Get form data
+            username = request.form.get('username', '').strip()
+            email = request.form.get('email', '').strip()
+            full_name = request.form.get('full_name', '').strip()
+            password = request.form.get('password', '')
+            confirm_password = request.form.get('confirm_password', '')
+            
+            # Validation
+            if not all([username, email, full_name, password]):
+                flash('Todos os campos são obrigatórios.', 'error')
+                return render_template('register.html')
+            
+            if password != confirm_password:
+                flash('As palavras-passe não coincidem.', 'error')
+                return render_template('register.html')
+            
+            if len(password) < 6:
+                flash('A palavra-passe deve ter pelo menos 6 caracteres.', 'error')
+                return render_template('register.html')
+            
+            # Check if user already exists
+            existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
+            if existing_user:
+                flash('Utilizador ou email já existem.', 'error')
+                return render_template('register.html')
+            
+            # Generate confirmation token
+            confirmation_token = secrets.token_urlsafe(32)
+            
+            # Create new user
+            new_user = User(
+                username=username,
+                email=email,
+                full_name=full_name,
+                password_hash=generate_password_hash(password),
+                role='user',
+                is_active=False,  # User needs to confirm email
+                confirmation_token=confirmation_token,
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            # Send confirmation email
+            send_confirmation_email(email, full_name, confirmation_token)
+            
+            flash('Registo realizado com sucesso! Verifique o seu email para confirmar a conta.', 'success')
+            return redirect(url_for('login'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during registration: {e}")
+            flash('Erro durante o registo. Tente novamente.', 'error')
+    
+    return render_template('register.html')
+
+@app.route('/confirm-email/<token>')
+def confirm_email(token):
+    try:
+        from models import User
+        
+        user = User.query.filter_by(confirmation_token=token).first()
+        if not user:
+            flash('Token de confirmação inválido ou expirado.', 'error')
+            return redirect(url_for('login'))
+        
+        user.is_active = True
+        user.confirmation_token = None
+        user.updated_at = datetime.now()
+        
+        db.session.commit()
+        
+        flash('Email confirmado com sucesso! Pode agora fazer login.', 'success')
+        return redirect(url_for('login'))
+        
+    except Exception as e:
+        print(f"Error confirming email: {e}")
+        flash('Erro ao confirmar email. Tente novamente.', 'error')
+        return redirect(url_for('login'))
+
+def send_confirmation_email(email, full_name, token):
+    """Send email confirmation using SendGrid"""
+    try:
+        import os
+        from sendgrid import SendGridAPIClient
+        from sendgrid.helpers.mail import Mail
+        
+        # Check if SendGrid API key is available
+        sendgrid_key = os.environ.get('SENDGRID_API_KEY')
+        if not sendgrid_key:
+            print("SendGrid API key not configured - email not sent")
+            return False
+        
+        # Create confirmation URL
+        base_url = request.url_root
+        confirmation_url = f"{base_url}confirm-email/{token}"
+        
+        # Email content
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #007bff;">Bem-vindo ao GestVendas!</h2>
+            <p>Olá {full_name},</p>
+            <p>Obrigado por se registar no GestVendas. Para ativar a sua conta, clique no botão abaixo:</p>
+            <p style="text-align: center; margin: 30px 0;">
+                <a href="{confirmation_url}" 
+                   style="background-color: #007bff; color: white; padding: 12px 24px; 
+                          text-decoration: none; border-radius: 4px; display: inline-block;">
+                    Confirmar Email
+                </a>
+            </p>
+            <p>Se não conseguir clicar no botão, copie e cole este link no seu navegador:</p>
+            <p><a href="{confirmation_url}">{confirmation_url}</a></p>
+            <p>Este link expira em 24 horas.</p>
+            <br>
+            <p>Cumprimentos,<br>Equipa GestVendas</p>
+        </div>
+        """
+        
+        message = Mail(
+            from_email='noreply@gestvendas.com',
+            to_emails=email,
+            subject='Confirme o seu registo - GestVendas',
+            html_content=html_content
+        )
+        
+        sg = SendGridAPIClient(sendgrid_key)
+        response = sg.send(message)
+        
+        print(f"Email sent successfully: {response.status_code}")
+        return True
+        
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return False

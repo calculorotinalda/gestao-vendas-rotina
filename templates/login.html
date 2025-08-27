@@ -99,9 +99,9 @@
         
         <form method="POST" action="{{ url_for('login') }}">
             <div class="form-floating">
-                <input type="text" class="form-control" id="username" name="username" placeholder="Nome de utilizador" required>
-                <label for="username">
-                    <i class="fas fa-user me-2"></i>Nome de utilizador
+                <input type="text" class="form-control" id="login_field" name="login_field" placeholder="Utilizador ou Email" required>
+                <label for="login_field">
+                    <i class="fas fa-user me-2"></i>Utilizador ou Email
                 </label>
             </div>
             
@@ -116,6 +116,10 @@
                 <i class="fas fa-sign-in-alt me-2"></i>Entrar
             </button>
         </form>
+        
+        <div class="text-center mt-3 mb-3">
+            <p>Não tem conta? <a href="{{ url_for('register') }}" class="text-primary fw-bold">Registe-se aqui</a></p>
+        </div>
         
         <div class="demo-info">
             <h6><i class="fas fa-info-circle me-1"></i>Dados de Demonstração</h6>

@@ -33,4 +33,4 @@ localPort = 5000
 externalPort = 80
 
 [agent]
-integrations = ["flask_supabase==1.0.0", "python_database==1.0.0"]
+integrations = ["flask_supabase==1.0.0", "python_database==1.0.0", "python_sendgrid==1.0.0", "flask_authentication==1.0.0"]

@@ -13,6 +13,7 @@ class User(db.Model):
     full_name = db.Column(db.String(200))
     role = db.Column(db.String(50), default='user')
     is_active = db.Column(db.Boolean, default=True)
+    confirmation_token = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
