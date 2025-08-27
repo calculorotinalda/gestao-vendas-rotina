@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Sale Form</title>
+    <script>
+        function testProductSelection() {
+            // Simulate the selectProduct function
+            const productId = '1';
+            const productName = 'Test Product';
+            const productCode = 'TEST001';
+            const productPrice = 50.00;
+            const productStock = 10;
+            const productTax = 23.00;
+            
+            console.log('Testing product selection...');
+            
+            // Check if product already exists in the table
+            const existingRow = document.querySelector(`#productRows tr[data-product-id="${productId}"]`);
+            console.log('Existing row found:', existingRow);
+            
+            if (existingRow) {
+                alert('Este produto já foi adicionado à venda.');
+                return;
+            }
+            
+            const tbody = document.getElementById('productRows');
+            const newRow = document.createElement('tr');
+            newRow.dataset.productId = productId;
+            newRow.innerHTML = `
+                <td>
+                    <strong>${productCode}</strong><br>
+                    <small class="text-muted">${productName}</small>
+                </td>
+                <td>€${productPrice.toFixed(2)}</td>
+                <td>1</td>
+                <td>${productTax}%</td>
+                <td>€${productPrice.toFixed(2)}</td>
+                <td>
+                    <button onclick="removeProductRow(this)">Remove</button>
+                </td>
+            `;
+            
+            tbody.appendChild(newRow);
+            console.log('Product added successfully');
+        }
+        
+        function removeProductRow(button) {
+            button.closest('tr').remove();
+        }
+    </script>
+</head>
+<body>
+    <h1>Test Sale Form</h1>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Tax</th>
+                <th>Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="productRows">
+            <!-- Products will be added here -->
+        </tbody>
+    </table>
+    
+    <button onclick="testProductSelection()">Add Test Product</button>
+    
+    <script>
+        // Test the function multiple times
+        console.log('Page loaded, ready for testing');
+    </script>
+</body>
+</html>

@@ -252,16 +252,27 @@ function selectProduct(button) {
     const productStock = parseInt(row.dataset.productStock);
     const productTax = parseFloat(row.dataset.productTax);
     
-    // Check if product already exists in the table
-    const existingRow = document.querySelector(`tr[data-product-id="${productId}"]`);
-    if (existingRow) {
+    console.log('Selecting product:', productId, productName);
+    
+    // Check if product already exists in the products table (not the modal table)
+    const productTableBody = document.getElementById('productRows');
+    const existingRows = productTableBody.querySelectorAll('tr[data-product-id]');
+    let productExists = false;
+    
+    existingRows.forEach(existingRow => {
+        if (existingRow.dataset.productId === productId) {
+            productExists = true;
+        }
+    });
+    
+    if (productExists) {
         alert('Este produto já foi adicionado à venda.');
         return;
     }
     
     const tbody = document.getElementById('productRows');
     const newRow = document.createElement('tr');
-    newRow.dataset.productId = productId;
+    newRow.setAttribute('data-product-id', productId);
     newRow.innerHTML = `
         <td>
             <strong>${productCode}</strong><br>
