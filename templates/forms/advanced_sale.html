@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Venda - GestVendas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-shopping-cart me-2"></i>Nova Venda</h2>
+        <a href="{{ url_for('sales') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Voltar às Vendas
+        </a>
+    </div>
+
+    <form id="saleForm" method="POST">
+        <div class="row">
+            <!-- Sale Information -->
+            <div class="col-md-8">
+                <div class="data-card">
+                    <div class="header">
+                        <h5><i class="fas fa-info-circle me-2"></i>Informações da Venda</h5>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sale_date" class="form-label">Data da Venda</label>
+                                <input type="date" class="form-control" id="sale_date" name="sale_date" 
+                                       value="{{ today }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customer_id" class="form-label">Cliente</label>
+                                <select class="form-select" id="customer_id" name="customer_id" required>
+                                    <option value="">Selecione um cliente</option>
+                                    {% for customer in customers %}
+                                    <option value="{{ customer.id }}" 
+                                            data-email="{{ customer.email or '' }}"
+                                            data-phone="{{ customer.phone or '' }}"
+                                            data-city="{{ customer.city or '' }}">
+                                        {{ customer.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="payment_method" class="form-label">Método de Pagamento</label>
+                                <select class="form-select" id="payment_method" name="payment_method">
+                                    <option value="dinheiro">Dinheiro</option>
+                                    <option value="multibanco" selected>Multibanco</option>
+                                    <option value="transferencia">Transferência Bancária</option>
+                                    <option value="cartao">Cartão de Crédito</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="due_date" class="form-label">Data de Vencimento</label>
+                                <input type="date" class="form-control" id="due_date" name="due_date">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Section -->
+                <div class="data-card mt-4">
+                    <div class="header">
+                        <h5><i class="fas fa-box me-2"></i>Produtos</h5>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addProductRow()">
+                            <i class="fas fa-plus me-1"></i>Adicionar Produto
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 35%">Produto</th>
+                                    <th style="width: 15%">Preço Unit.</th>
+                                    <th style="width: 15%">Quantidade</th>
+                                    <th style="width: 10%">IVA %</th>
+                                    <th style="width: 15%">Total</th>
+                                    <th style="width: 10%">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productRows">
+                                <!-- Product rows will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="col-md-4">
+                <div class="data-card sticky-top" style="top: 20px;">
+                    <div class="header">
+                        <h5><i class="fas fa-calculator me-2"></i>Resumo da Venda</h5>
+                    </div>
+                    
+                    <!-- Customer Info -->
+                    <div id="customerInfo" class="mb-3" style="display: none;">
+                        <h6>Informações do Cliente</h6>
+                        <div class="customer-details">
+                            <small class="text-muted" id="customerDetails"></small>
+                        </div>
+                    </div>
+                    
+                    <!-- Totals -->
+                    <div class="totals-section">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal (s/ IVA):</span>
+                            <strong id="subtotalDisplay">€0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total IVA:</span>
+                            <strong id="taxDisplay">€0.00</strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="fs-5">Total:</span>
+                            <strong class="fs-4 text-primary" id="totalDisplay">€0.00</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Observações</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                  placeholder="Observações adicionais..."></textarea>
+                    </div>
+                    
+                    <!-- Hidden inputs for totals -->
+                    <input type="hidden" id="subtotal" name="subtotal" value="0">
+                    <input type="hidden" id="tax_amount" name="tax_amount" value="0">
+                    <input type="hidden" id="total_amount" name="total_amount" value="0">
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-save me-1"></i>Registar Venda
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="calculateTotals()">
+                            <i class="fas fa-calculator me-1"></i>Recalcular
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Product selection modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Selecionar Produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="productSearch" 
+                           placeholder="Pesquisar por nome ou código...">
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Produto</th>
+                                <th>Preço</th>
+                                <th>Stock</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="availableProducts">
+                            {% for product in products %}
+                            <tr data-product-id="{{ product.id }}"
+                                data-product-name="{{ product.name }}"
+                                data-product-code="{{ product.code }}"
+                                data-product-price="{{ product.sale_price }}"
+                                data-product-stock="{{ product.stock_quantity }}"
+                                data-product-tax="{{ product.tax_rate }}">
+                                <td>{{ product.code }}</td>
+                                <td>{{ product.name }}</td>
+                                <td>€{{ "%.2f"|format(product.sale_price) }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if product.stock_quantity <= product.min_stock else 'success' }}">
+                                        {{ product.stock_quantity }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary" 
+                                            onclick="selectProduct(this)" 
+                                            {{ 'disabled' if product.stock_quantity <= 0 else '' }}>
+                                        <i class="fas fa-plus"></i> Adicionar
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRowIndex = 0;
+
+// Customer selection handling
+document.getElementById('customer_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const customerInfo = document.getElementById('customerInfo');
+    const customerDetails = document.getElementById('customerDetails');
+    
+    if (this.value) {
+        const email = selectedOption.dataset.email;
+        const phone = selectedOption.dataset.phone;
+        const city = selectedOption.dataset.city;
+        
+        let details = selectedOption.text;
+        if (email) details += `<br>Email: ${email}`;
+        if (phone) details += `<br>Telefone: ${phone}`;
+        if (city) details += `<br>Cidade: ${city}`;
+        
+        customerDetails.innerHTML = details;
+        customerInfo.style.display = 'block';
+    } else {
+        customerInfo.style.display = 'none';
+    }
+});
+
+// Add product row
+function addProductRow() {
+    document.getElementById('productModal').querySelector('[data-bs-dismiss="modal"]').click = null;
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+
+// Select product from modal
+function selectProduct(button) {
+    const row = button.closest('tr');
+    const productId = row.dataset.productId;
+    const productName = row.dataset.productName;
+    const productCode = row.dataset.productCode;
+    const productPrice = parseFloat(row.dataset.productPrice);
+    const productStock = parseInt(row.dataset.productStock);
+    const productTax = parseFloat(row.dataset.productTax);
+    
+    // Check if product already exists in the table
+    const existingRow = document.querySelector(`tr[data-product-id="${productId}"]`);
+    if (existingRow) {
+        alert('Este produto já foi adicionado à venda.');
+        return;
+    }
+    
+    const tbody = document.getElementById('productRows');
+    const newRow = document.createElement('tr');
+    newRow.dataset.productId = productId;
+    newRow.innerHTML = `
+        <td>
+            <strong>${productCode}</strong><br>
+            <small class="text-muted">${productName}</small>
+            <input type="hidden" name="products[${currentRowIndex}][id]" value="${productId}">
+        </td>
+        <td>
+            <input type="number" class="form-control" step="0.01" min="0" 
+                   name="products[${currentRowIndex}][price]" value="${productPrice.toFixed(2)}" 
+                   onchange="calculateRowTotal(this)" required>
+        </td>
+        <td>
+            <input type="number" class="form-control" min="1" max="${productStock}" 
+                   name="products[${currentRowIndex}][quantity]" value="1" 
+                   onchange="calculateRowTotal(this)" required>
+        </td>
+        <td>
+            <input type="number" class="form-control" step="0.01" min="0" max="100" 
+                   name="products[${currentRowIndex}][tax_rate]" value="${productTax}" 
+                   onchange="calculateRowTotal(this)" required>
+        </td>
+        <td>
+            <span class="row-total">€${productPrice.toFixed(2)}</span>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeProductRow(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(newRow);
+    currentRowIndex++;
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+    
+    // Calculate totals
+    calculateTotals();
+}
+
+// Remove product row
+function removeProductRow(button) {
+    button.closest('tr').remove();
+    calculateTotals();
+}
+
+// Calculate row total
+function calculateRowTotal(input) {
+    const row = input.closest('tr');
+    const price = parseFloat(row.querySelector('input[name*="[price]"]').value) || 0;
+    const quantity = parseInt(row.querySelector('input[name*="[quantity]"]').value) || 0;
+    const taxRate = parseFloat(row.querySelector('input[name*="[tax_rate]"]').value) || 0;
+    
+    const subtotal = price * quantity;
+    const taxAmount = subtotal * (taxRate / 100);
+    const total = subtotal + taxAmount;
+    
+    row.querySelector('.row-total').textContent = `€${total.toFixed(2)}`;
+    
+    calculateTotals();
+}
+
+// Calculate all totals
+function calculateTotals() {
+    let subtotal = 0;
+    let totalTax = 0;
+    
+    document.querySelectorAll('#productRows tr').forEach(row => {
+        const price = parseFloat(row.querySelector('input[name*="[price]"]').value) || 0;
+        const quantity = parseInt(row.querySelector('input[name*="[quantity]"]').value) || 0;
+        const taxRate = parseFloat(row.querySelector('input[name*="[tax_rate]"]').value) || 0;
+        
+        const rowSubtotal = price * quantity;
+        const rowTax = rowSubtotal * (taxRate / 100);
+        
+        subtotal += rowSubtotal;
+        totalTax += rowTax;
+    });
+    
+    const total = subtotal + totalTax;
+    
+    // Update displays
+    document.getElementById('subtotalDisplay').textContent = `€${subtotal.toFixed(2)}`;
+    document.getElementById('taxDisplay').textContent = `€${totalTax.toFixed(2)}`;
+    document.getElementById('totalDisplay').textContent = `€${total.toFixed(2)}`;
+    
+    // Update hidden inputs
+    document.getElementById('subtotal').value = subtotal.toFixed(2);
+    document.getElementById('tax_amount').value = totalTax.toFixed(2);
+    document.getElementById('total_amount').value = total.toFixed(2);
+}
+
+// Product search
+document.getElementById('productSearch').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#availableProducts tr');
+    
+    rows.forEach(row => {
+        const productName = row.dataset.productName.toLowerCase();
+        const productCode = row.dataset.productCode.toLowerCase();
+        
+        if (productName.includes(searchTerm) || productCode.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Form validation
+document.getElementById('saleForm').addEventListener('submit', function(e) {
+    const productRows = document.querySelectorAll('#productRows tr');
+    
+    if (productRows.length === 0) {
+        e.preventDefault();
+        alert('Adicione pelo menos um produto à venda.');
+        return;
+    }
+    
+    const total = parseFloat(document.getElementById('total_amount').value);
+    if (total <= 0) {
+        e.preventDefault();
+        alert('O total da venda deve ser superior a zero.');
+        return;
+    }
+});
+</script>
+
+<style>
+.totals-section {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.customer-details {
+    background-color: #e9ecef;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+#productRows tr {
+    vertical-align: middle;
+}
+
+.row-total {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.modal-body .table td {
+    vertical-align: middle;
+}
+</style>
+{% endblock %}

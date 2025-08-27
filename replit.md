@@ -8,6 +8,15 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+## Advanced Sales System (August 2025)
+- Implemented advanced sales system with customer and product selection
+- Real-time calculation of subtotal, IVA, and total amounts
+- Dynamic product selection from inventory with stock validation
+- Automatic stock updates when sales are completed
+- Interactive interface with product search and selection modal
+- Integration with SaleItem model for detailed transaction tracking
+- Inventory movement tracking for sales transactions
+
 ## User Registration System (August 2025)
 - Implemented complete user registration with email confirmation
 - Added SendGrid email integration for confirmation emails
@@ -16,6 +25,16 @@ Preferred communication style: Simple, everyday language.
 - Created registration form with password validation and confirmation
 - Users receive confirmation email and must activate account before login
 - Added fallback admin login (admin/admin123) for development
+
+## Comprehensive Reports System (August 2025)
+- Created detailed reporting system with 4 main sections
+- Sales reports with transaction history and analytics
+- Product reports with performance metrics and stock alerts
+- Purchase reports with supplier transaction tracking
+- Financial reports with profit/loss analysis and charts
+- Interactive filtering by time period (7, 30, 90, 365 days)
+- Chart.js integration for visual data representation
+- DataTables for searchable and sortable report listings
 
 # System Architecture
 

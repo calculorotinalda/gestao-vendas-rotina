@@ -608,7 +608,7 @@ def add_supplier():
     
     return render_template('forms/add_supplier.html')
 
-# Add Sale
+# Add Sale - Advanced Version
 @app.route('/sales/add', methods=['GET', 'POST'])
 def add_sale():
     if not session.get('user_id'):
@@ -616,36 +616,96 @@ def add_sale():
     
     if request.method == 'POST':
         try:
-            from models import Sale
+            from models import Sale, SaleItem, Product, InventoryMovement
             
             # Generate unique invoice number
             invoice_number = f"VEN{datetime.now().strftime('%Y%m%d')}{secrets.token_hex(3).upper()}"
             
-            # Safely parse dates
+            # Parse dates
             sale_date_str = request.form.get('sale_date')
             due_date_str = request.form.get('due_date')
             
             sale_date = datetime.strptime(sale_date_str, '%Y-%m-%d').date() if sale_date_str else datetime.now().date()
             due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
             
+            # Create sale
             new_sale = Sale(
                 invoice_number=invoice_number,
-                customer_id=int(request.form.get('customer_id') or 1),
+                customer_id=int(request.form.get('customer_id')),
                 user_id=session['user_id'],
                 sale_date=sale_date,
                 due_date=due_date,
-                subtotal=float(request.form.get('subtotal') or 0),
-                tax_amount=float(request.form.get('tax_amount') or 0),
-                total_amount=float(request.form.get('total_amount') or 0),
-                discount=float(request.form.get('discount') or 0),
-                status=request.form.get('status', 'pendente'),
-                payment_method=request.form.get('payment_method', 'dinheiro'),
+                subtotal=float(request.form.get('subtotal', 0)),
+                tax_amount=float(request.form.get('tax_amount', 0)),
+                total_amount=float(request.form.get('total_amount', 0)),
+                status='concluida',
+                payment_method=request.form.get('payment_method', 'multibanco'),
                 notes=request.form.get('notes', ''),
                 created_at=datetime.now(),
                 updated_at=datetime.now()
             )
             
             db.session.add(new_sale)
+            db.session.flush()  # Get the sale ID
+            
+            # Process sale items
+            products_data = {}
+            for key, value in request.form.items():
+                if key.startswith('products[') and key.endswith(']'):
+                    # Parse products[0][id], products[0][price], etc.
+                    import re
+                    match = re.match(r'products\[(\d+)\]\[(\w+)\]', key)
+                    if match:
+                        index, field = match.groups()
+                        if index not in products_data:
+                            products_data[index] = {}
+                        products_data[index][field] = value
+            
+            # Create sale items and update inventory
+            for product_data in products_data.values():
+                if not all(k in product_data for k in ['id', 'price', 'quantity', 'tax_rate']):
+                    continue
+                    
+                product_id = int(product_data['id'])
+                quantity = int(product_data['quantity'])
+                unit_price = float(product_data['price'])
+                tax_rate = float(product_data['tax_rate'])
+                
+                # Calculate totals
+                subtotal = quantity * unit_price
+                tax_amount = subtotal * (tax_rate / 100)
+                total_price = subtotal + tax_amount
+                
+                # Create sale item
+                sale_item = SaleItem(
+                    sale_id=new_sale.id,
+                    product_id=product_id,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    tax_rate=tax_rate,
+                    total_price=total_price
+                )
+                db.session.add(sale_item)
+                
+                # Update product stock
+                product = Product.query.get(product_id)
+                if product:
+                    product.stock_quantity = max(0, product.stock_quantity - quantity)
+                    product.updated_at = datetime.now()
+                    
+                    # Create inventory movement
+                    movement = InventoryMovement(
+                        product_id=product_id,
+                        movement_type='saida',
+                        quantity=-quantity,
+                        reference_type='venda',
+                        reference_id=new_sale.id,
+                        notes=f'Venda {invoice_number}',
+                        user_id=session['user_id'],
+                        created_at=datetime.now()
+                    )
+                    db.session.add(movement)
+            
             db.session.commit()
             
             flash('Venda registada com sucesso!', 'success')
@@ -656,15 +716,20 @@ def add_sale():
             print(f"Error adding sale: {e}")
             flash(f'Erro ao registar venda: {str(e)}', 'error')
     
-    # Get customers for dropdown
-    customers = []
+    # GET request - load form data
     try:
-        from models import Customer
+        from models import Customer, Product
         customers = Customer.query.filter_by(is_active=True).all()
+        products = Product.query.filter_by(is_active=True).filter(Product.stock_quantity > 0).all()
+        
+        return render_template('forms/advanced_sale.html', 
+                             customers=customers, 
+                             products=products,
+                             today=datetime.now().strftime('%Y-%m-%d'))
     except Exception as e:
-        print(f"Error loading customers: {e}")
-    
-    return render_template('forms/add_sale.html', customers=customers, today=datetime.now().strftime('%Y-%m-%d'))
+        print(f"Error loading form data: {e}")
+        flash('Erro ao carregar dados do formulário.', 'error')
+        return redirect(url_for('sales'))
 
 # Add Purchase
 @app.route('/purchases/add', methods=['GET', 'POST'])
