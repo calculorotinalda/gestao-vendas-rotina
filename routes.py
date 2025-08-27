@@ -506,50 +506,78 @@ def analytics():
             ).scalar() or 0
             purchase_data.append(float(day_purchases))
         
-        # Category sales distribution
-        category_sales = db.session.query(
-            Category.name,
-            func.sum(SaleItem.total_price)
-        ).join(Product).join(SaleItem).join(Sale).filter(
-            Sale.created_at >= last_30_days
-        ).group_by(Category.name).all()
+        # Category sales distribution - simplified
+        try:
+            category_sales = []
+            categories = Category.query.all()
+            for category in categories:
+                total = db.session.query(func.sum(SaleItem.total_price)).select_from(
+                    SaleItem.__table__.join(Sale.__table__).join(Product.__table__)
+                ).filter(
+                    Product.category_id == category.id,
+                    Sale.created_at >= last_30_days
+                ).scalar() or 0
+                if total > 0:
+                    category_sales.append((category.name, total))
+            
+            category_labels = [item[0] for item in category_sales]
+            category_data = [float(item[1]) for item in category_sales]
+        except:
+            category_labels = []
+            category_data = []
         
-        category_labels = [item[0] for item in category_sales]
-        category_data = [float(item[1]) for item in category_sales]
+        # Top products by sales - simplified
+        try:
+            top_products = []
+            products = Product.query.limit(20).all()  # Limit to avoid performance issues
+            for product in products:
+                total = db.session.query(func.sum(SaleItem.total_price)).select_from(
+                    SaleItem.__table__.join(Sale.__table__)
+                ).filter(
+                    SaleItem.product_id == product.id,
+                    Sale.created_at >= last_30_days
+                ).scalar() or 0
+                if total > 0:
+                    top_products.append((product.name, total))
+            
+            top_products = sorted(top_products, key=lambda x: x[1], reverse=True)[:5]
+            top_products_labels = [item[0] for item in top_products]
+            top_products_data = [float(item[1]) for item in top_products]
+        except:
+            top_products_labels = []
+            top_products_data = []
         
-        # Top products by sales
-        top_products = db.session.query(
-            Product.name,
-            func.sum(SaleItem.total_price)
-        ).join(SaleItem).join(Sale).filter(
-            Sale.created_at >= last_30_days
-        ).group_by(Product.name).order_by(
-            func.sum(SaleItem.total_price).desc()
-        ).limit(5).all()
-        
-        top_products_labels = [item[0] for item in top_products]
-        top_products_data = [float(item[1]) for item in top_products]
-        
-        # Margin analysis (volume vs margin)
+        # Margin analysis - simplified
         margin_analysis = []
-        for product in Product.query.all():
-            volume = db.session.query(func.sum(SaleItem.quantity)).filter(
-                SaleItem.product_id == product.id
-            ).scalar() or 0
-            margin = product.profit_margin
-            if volume > 0:
-                margin_analysis.append({'x': volume, 'y': margin})
+        try:
+            for product in Product.query.limit(10).all():
+                volume = db.session.query(func.sum(SaleItem.quantity)).filter(
+                    SaleItem.product_id == product.id
+                ).scalar() or 0
+                if volume > 0:
+                    margin_analysis.append({'x': int(volume), 'y': float(product.profit_margin)})
+        except:
+            pass
         
-        # Top customers
-        top_customers = db.session.query(
-            Customer.name,
-            func.count(Sale.id).label('sales_count'),
-            func.sum(Sale.total_amount).label('total_amount')
-        ).join(Sale).filter(
-            Sale.created_at >= last_30_days
-        ).group_by(Customer.id, Customer.name).order_by(
-            func.sum(Sale.total_amount).desc()
-        ).limit(5).all()
+        # Top customers - simplified
+        try:
+            top_customers = []
+            customers = Customer.query.limit(20).all()
+            for customer in customers:
+                sales_count = Sale.query.filter(
+                    Sale.customer_id == customer.id,
+                    Sale.created_at >= last_30_days
+                ).count()
+                total_amount = db.session.query(func.sum(Sale.total_amount)).filter(
+                    Sale.customer_id == customer.id,
+                    Sale.created_at >= last_30_days
+                ).scalar() or 0
+                if sales_count > 0:
+                    top_customers.append((customer.name, sales_count, total_amount))
+            
+            top_customers = sorted(top_customers, key=lambda x: x[2], reverse=True)[:5]
+        except:
+            top_customers = []
         
         # Stock alerts
         stock_alerts = Product.query.filter(

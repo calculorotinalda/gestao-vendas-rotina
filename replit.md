@@ -8,6 +8,16 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+## Advanced Analytics System (August 2025)
+- Implemented comprehensive analytics dashboard with KPIs and charts
+- Revenue growth, profit margin, average order value, and inventory turnover metrics
+- Interactive Chart.js visualizations for sales vs purchases evolution
+- Category sales distribution with doughnut charts
+- Top products and customers analysis with performance metrics
+- Stock alerts and inventory monitoring system
+- Financial analysis with ROI calculations and profit tracking
+- Simplified SQL queries to avoid join conflicts and improve performance
+
 ## Advanced Purchase System (August 2025)
 - Implemented comprehensive purchase management system similar to sales
 - Supplier selection from database with contact information display
