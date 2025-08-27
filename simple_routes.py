@@ -852,9 +852,12 @@ def register():
             db.session.commit()
             
             # Send confirmation email
-            send_confirmation_email(email, full_name, confirmation_token)
+            email_sent = send_confirmation_email(email, full_name, confirmation_token)
             
-            flash('Registo realizado com sucesso! Verifique o seu email para confirmar a conta.', 'success')
+            if email_sent:
+                flash('Registo realizado com sucesso! Verifique o seu email para confirmar a conta.', 'success')
+            else:
+                flash('Registo realizado com sucesso! Nota: Email de confirmação não pôde ser enviado. Contacte o administrador para ativar a conta.', 'warning')
             return redirect(url_for('login'))
             
         except Exception as e:
@@ -881,7 +884,7 @@ def confirm_email(token):
         db.session.commit()
         
         flash('Email confirmado com sucesso! Pode agora fazer login.', 'success')
-        return redirect(url_for('login'))
+        return render_template('email_confirmed.html')
         
     except Exception as e:
         print(f"Error confirming email: {e}")
@@ -926,8 +929,12 @@ def send_confirmation_email(email, full_name, token):
         </div>
         """
         
+        # Use a verified sender email for SendGrid
+        # You need to verify this email in your SendGrid account
+        verified_sender = 'your-verified-email@domain.com'  # Replace with your verified sender
+        
         message = Mail(
-            from_email='noreply@gestvendas.com',
+            from_email=verified_sender,
             to_emails=email,
             subject='Confirme o seu registo - GestVendas',
             html_content=html_content

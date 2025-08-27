@@ -6,6 +6,17 @@ GestVendas is a comprehensive sales and purchase management system built with Fl
 
 Preferred communication style: Simple, everyday language.
 
+# Recent Changes
+
+## User Registration System (August 2025)
+- Implemented complete user registration with email confirmation
+- Added SendGrid email integration for confirmation emails
+- Enhanced login system to support username OR email authentication
+- Added database field `confirmation_token` to User model
+- Created registration form with password validation and confirmation
+- Users receive confirmation email and must activate account before login
+- Added fallback admin login (admin/admin123) for development
+
 # System Architecture
 
 ## Backend Architecture
@@ -34,11 +45,13 @@ Preferred communication style: Simple, everyday language.
 - **Inventory Management**: Stock tracking with minimum/maximum levels
 - **Sales Processing**: Invoice generation with automatic numbering
 - **Purchase Management**: Supplier purchase tracking
-- **User Management**: Multi-user support with role-based permissions
+- **User Management**: Multi-user support with role-based permissions and user registration
 - **Financial Reporting**: Currency formatting and tax calculations
 - **CRUD Operations**: Complete create, read, update, delete functionality for all entities
 - **Data Validation**: Form validation with required fields and type checking
 - **Automated Numbering**: Unique invoice numbers for sales and purchases
+- **User Registration**: Email confirmation system with SendGrid integration
+- **Authentication**: Login with username or email support
 
 ## Security Measures
 - **Password Security**: Werkzeug password hashing
