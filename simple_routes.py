@@ -752,12 +752,12 @@ def add_purchase():
             due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
             
             new_purchase = Purchase(
-                purchase_number=invoice_number,
+                invoice_number=invoice_number,
                 supplier_id=int(request.form.get('supplier_id') or 1),
                 user_id=session['user_id'],
                 purchase_date=purchase_date,
                 due_date=due_date,
-                subtotal_amount=float(request.form.get('subtotal') or 0),
+                subtotal=float(request.form.get('subtotal') or 0),
                 tax_amount=float(request.form.get('tax_amount') or 0),
                 total_amount=float(request.form.get('total_amount') or 0),
                 status=request.form.get('status', 'concluida'),

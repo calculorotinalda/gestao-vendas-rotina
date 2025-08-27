@@ -8,6 +8,16 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+## Advanced Purchase System (August 2025)
+- Implemented comprehensive purchase management system similar to sales
+- Supplier selection from database with contact information display
+- Product selection with purchase price calculation and stock validation
+- Real-time calculation of subtotal, IVA, and total amounts
+- Automatic stock increases when purchases are completed
+- Integration with PurchaseItem model for detailed transaction tracking
+- Inventory movement tracking for purchase transactions (entrada type)
+- Corrected model field names (invoice_number vs purchase_number, subtotal vs subtotal_amount)
+
 ## Advanced Sales System (August 2025)
 - Implemented advanced sales system with customer and product selection
 - Real-time calculation of subtotal, IVA, and total amounts
