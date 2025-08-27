@@ -22,10 +22,17 @@ def login():
             from models import User
             from werkzeug.security import check_password_hash
             
+            print(f"Login attempt: {login_field} / {password}")
+            
             # Find user by username or email
             user = User.query.filter(
                 (User.username == login_field) | (User.email == login_field)
             ).first()
+            
+            print(f"User found: {user is not None}")
+            if user:
+                print(f"User active: {user.is_active}")
+                print(f"Password check: {check_password_hash(user.password_hash, password)}")
             
             if user and check_password_hash(user.password_hash, password):
                 if not user.is_active:
@@ -36,13 +43,17 @@ def login():
                     session['username'] = user.username
                     session['user_role'] = user.role
                     session['full_name'] = user.full_name
+                    print(f"Login successful for {user.username}")
                     flash(f'Bem-vindo de volta, {user.full_name}!', 'success')
                     return redirect(url_for('dashboard'))
             else:
+                print("Login failed - invalid credentials")
                 flash('Credenciais inválidas. Verifique o utilizador/email e palavra-passe.', 'error')
                 
         except Exception as e:
             print(f"Error during login: {e}")
+            import traceback
+            traceback.print_exc()
             flash('Erro de base de dados. Tente novamente.', 'error')
     
     return render_template('login.html')
@@ -52,19 +63,64 @@ def dashboard():
     if not session.get('user_id'):
         return redirect(url_for('login'))
     
-    # Mock dashboard data for now
-    stats = {
-        'monthly_sales': 0,
-        'total_sales': 0,
-        'monthly_purchases': 0,
-        'total_purchases': 0,
-        'profit': 0,
-        'low_stock_alerts': 0,
-        'recent_sales': [],
-        'restock_products': []
-    }
-    
-    return render_template('index.html', stats=stats)
+    try:
+        from models import Sale, Purchase, Product, Customer
+        from datetime import datetime, timedelta
+        from sqlalchemy import func
+        
+        # Calculate real statistics
+        total_sales = db.session.query(func.sum(Sale.total_amount)).scalar() or 0
+        total_purchases = db.session.query(func.sum(Purchase.total_amount)).scalar() or 0
+        
+        # Monthly data
+        month_start = datetime.now().replace(day=1)
+        monthly_sales = db.session.query(func.sum(Sale.total_amount)).filter(
+            Sale.created_at >= month_start
+        ).scalar() or 0
+        monthly_purchases = db.session.query(func.sum(Purchase.total_amount)).filter(
+            Purchase.created_at >= month_start
+        ).scalar() or 0
+        
+        # Stock alerts
+        low_stock_alerts = Product.query.filter(
+            Product.stock_quantity <= Product.min_stock
+        ).count()
+        
+        # Recent sales
+        recent_sales = Sale.query.order_by(Sale.created_at.desc()).limit(5).all()
+        
+        # Products needing restock
+        restock_products = Product.query.filter(
+            Product.stock_quantity <= Product.min_stock
+        ).limit(5).all()
+        
+        stats = {
+            'monthly_sales': float(monthly_sales),
+            'total_sales': float(total_sales),
+            'monthly_purchases': float(monthly_purchases),
+            'total_purchases': float(total_purchases),
+            'profit': float(total_sales - total_purchases),
+            'low_stock_alerts': low_stock_alerts,
+            'recent_sales': recent_sales,
+            'restock_products': restock_products
+        }
+        
+        return render_template('index.html', stats=stats)
+        
+    except Exception as e:
+        print(f"Dashboard error: {e}")
+        # Fallback to basic stats
+        stats = {
+            'monthly_sales': 0,
+            'total_sales': 0,
+            'monthly_purchases': 0,
+            'total_purchases': 0,
+            'profit': 0,
+            'low_stock_alerts': 0,
+            'recent_sales': [],
+            'restock_products': []
+        }
+        return render_template('index.html', stats=stats)
 
 @app.route('/logout')
 def logout():
