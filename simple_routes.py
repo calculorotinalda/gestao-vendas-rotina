@@ -10,8 +10,13 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        login_field = request.form.get('login_field', '').strip()  # Can be username or email
+        # Handle different form field names (login_field or username)
+        login_field = request.form.get('login_field', '').strip() or request.form.get('username', '').strip()
         password = request.form.get('password', '')
+        
+        if not login_field or not password:
+            flash('Por favor, preencha todos os campos.', 'error')
+            return render_template('login.html')
         
         try:
             from models import User
@@ -25,6 +30,7 @@ def login():
             if user and check_password_hash(user.password_hash, password):
                 if not user.is_active:
                     flash('Conta não ativada. Verifique o seu email para ativar a conta.', 'error')
+                    return render_template('login.html')
                 else:
                     session['user_id'] = user.id
                     session['username'] = user.username
@@ -37,16 +43,7 @@ def login():
                 
         except Exception as e:
             print(f"Error during login: {e}")
-            # Fallback to admin login for development
-            if login_field == 'admin' and password == 'admin123':
-                session['user_id'] = 1
-                session['username'] = login_field
-                session['user_role'] = 'admin'
-                session['full_name'] = 'Administrador'
-                flash('Login realizado com sucesso!', 'success')
-                return redirect(url_for('dashboard'))
-            else:
-                flash('Erro durante o login. Tente novamente.', 'error')
+            flash('Erro de base de dados. Tente novamente.', 'error')
     
     return render_template('login.html')
 
