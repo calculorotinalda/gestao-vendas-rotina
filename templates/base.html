@@ -91,6 +91,12 @@
                 <span class="text">Análises</span>
             </div>
             
+            <div class="sidebar-heading">Fiscal</div>
+            <div class="sidebar-item {{ 'active' if request.endpoint == 'saft' }}" onclick="window.location.href='{{ url_for('saft') }}'">
+                <i class="fas fa-file-export"></i>
+                <span class="text">SAF-T Portugal</span>
+            </div>
+            
             <div class="sidebar-heading">Sistema</div>
             {% if session.user_role == 'admin' %}
             <div class="sidebar-item {{ 'active' if request.endpoint == 'admin_activate_users' }}" onclick="window.location.href='{{ url_for('admin_activate_users') }}'">

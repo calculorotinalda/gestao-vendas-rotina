@@ -164,6 +164,278 @@ def analytics():
     
     return render_template('analytics_simple.html', analytics=analytics_data)
 
+@app.route('/saft')
+def saft():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    return render_template('saft.html')
+
+@app.route('/generate-saft', methods=['POST'])
+def generate_saft():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    from datetime import datetime
+    from xml.etree.ElementTree import Element, SubElement, tostring
+    from xml.dom import minidom
+    
+    # Get date range from form
+    start_date = request.form.get('start_date', '')
+    end_date = request.form.get('end_date', '')
+    
+    if not start_date or not end_date:
+        flash('Por favor selecione as datas inicial e final.', 'error')
+        return redirect(url_for('saft'))
+    
+    try:
+        # Convert dates
+        start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+        
+        # Generate SAFT XML
+        xml_content = generate_saft_xml(start_dt, end_dt)
+        
+        # Create response with XML file
+        from flask import Response
+        
+        filename = f"SAF-T_PT_{start_date}_{end_date}.xml"
+        response = Response(
+            xml_content,
+            mimetype='application/xml',
+            headers={'Content-Disposition': f'attachment; filename={filename}'}
+        )
+        
+        flash(f'Ficheiro SAF-T gerado com sucesso para o período {start_date} a {end_date}.', 'success')
+        return response
+        
+    except Exception as e:
+        print(f"SAFT generation error: {e}")
+        flash('Erro ao gerar ficheiro SAF-T. Tente novamente.', 'error')
+        return redirect(url_for('saft'))
+
+def generate_saft_xml(start_date, end_date):
+    """Generate SAF-T PT XML according to Portuguese regulation"""
+    from xml.etree.ElementTree import Element, SubElement
+    from xml.dom import minidom
+    from datetime import datetime
+    
+    # Root element
+    root = Element('AuditFile', xmlns="urn:OECD:StandardAuditFile-Tax:PT_1.04_01")
+    
+    # Header
+    header = SubElement(root, 'Header')
+    SubElement(header, 'AuditFileVersion').text = '1.04_01'
+    SubElement(header, 'CompanyID').text = '999999990'
+    SubElement(header, 'TaxRegistrationNumber').text = '999999990'
+    SubElement(header, 'TaxAccountingBasis').text = 'F'
+    SubElement(header, 'CompanyName').text = 'GestVendas'
+    
+    # Company address
+    business_address = SubElement(header, 'BusinessAddress')
+    SubElement(business_address, 'AddressDetail').text = 'Rua Exemplo, 123'
+    SubElement(business_address, 'City').text = 'Lisboa'
+    SubElement(business_address, 'PostalCode').text = '1000-000'
+    SubElement(business_address, 'Country').text = 'PT'
+    
+    # Fiscal year
+    SubElement(header, 'FiscalYear').text = str(start_date.year)
+    SubElement(header, 'StartDate').text = start_date.strftime('%Y-%m-%d')
+    SubElement(header, 'EndDate').text = end_date.strftime('%Y-%m-%d')
+    SubElement(header, 'CurrencyCode').text = 'EUR'
+    SubElement(header, 'DateCreated').text = datetime.now().strftime('%Y-%m-%d')
+    SubElement(header, 'TaxEntity').text = 'Global'
+    SubElement(header, 'ProductCompanyTaxID').text = '999999990'
+    SubElement(header, 'SoftwareCertificateNumber').text = '0'
+    SubElement(header, 'ProductID').text = 'GestVendas/2025'
+    SubElement(header, 'ProductVersion').text = '1.0'
+    
+    # Master Files
+    master_files = SubElement(root, 'MasterFiles')
+    
+    # General Ledger Accounts
+    general_ledger_accounts = SubElement(master_files, 'GeneralLedgerAccounts')
+    
+    # Add sample accounts
+    accounts = [
+        ('11', 'Caixa'),
+        ('12', 'Depósitos à Ordem'),
+        ('21', 'Clientes'),
+        ('22', 'Fornecedores'),
+        ('31', 'Existências'),
+        ('71', 'Vendas'),
+        ('61', 'Compras')
+    ]
+    
+    for acc_id, acc_name in accounts:
+        account = SubElement(general_ledger_accounts, 'Account')
+        SubElement(account, 'AccountID').text = acc_id
+        SubElement(account, 'AccountDescription').text = acc_name
+        SubElement(account, 'StandardAccountID').text = acc_id
+        SubElement(account, 'GroupingCategory').text = 'GR' if acc_id.startswith(('1', '2', '3')) else 'AR'
+        SubElement(account, 'GroupingCode').text = acc_id[0]
+        SubElement(account, 'TaxonomyCode').text = acc_id
+    
+    # Customers
+    customers = SubElement(master_files, 'Customer')
+    
+    try:
+        from models import Customer
+        db_customers = Customer.query.filter(
+            Customer.created_at >= start_date,
+            Customer.created_at <= end_date
+        ).all()
+        
+        for i, customer in enumerate(db_customers[:10], 1):  # Limit to 10 customers
+            cust = SubElement(customers, 'Customer')
+            SubElement(cust, 'CustomerID').text = str(customer.id)
+            SubElement(cust, 'AccountID').text = '21'
+            SubElement(cust, 'CustomerTaxID').text = customer.tax_number or f'99999999{i:01d}'
+            SubElement(cust, 'CompanyName').text = customer.name
+            
+            # Billing address
+            billing_addr = SubElement(cust, 'BillingAddress')
+            SubElement(billing_addr, 'AddressDetail').text = customer.address or 'Endereço não especificado'
+            SubElement(billing_addr, 'City').text = customer.city or 'Lisboa'
+            SubElement(billing_addr, 'PostalCode').text = customer.postal_code or '1000-000'
+            SubElement(billing_addr, 'Country').text = customer.country or 'PT'
+            
+            SubElement(cust, 'SelfBillingIndicator').text = '0'
+            
+    except:
+        # Fallback customer data
+        cust = SubElement(customers, 'Customer')
+        SubElement(cust, 'CustomerID').text = '1'
+        SubElement(cust, 'AccountID').text = '21'
+        SubElement(cust, 'CustomerTaxID').text = '999999991'
+        SubElement(cust, 'CompanyName').text = 'Cliente Geral'
+        
+        billing_addr = SubElement(cust, 'BillingAddress')
+        SubElement(billing_addr, 'AddressDetail').text = 'Rua do Cliente, 456'
+        SubElement(billing_addr, 'City').text = 'Porto'
+        SubElement(billing_addr, 'PostalCode').text = '4000-000'
+        SubElement(billing_addr, 'Country').text = 'PT'
+        
+        SubElement(cust, 'SelfBillingIndicator').text = '0'
+    
+    # Suppliers
+    suppliers = SubElement(master_files, 'Supplier')
+    
+    try:
+        from models import Supplier
+        db_suppliers = Supplier.query.filter(
+            Supplier.created_at >= start_date,
+            Supplier.created_at <= end_date
+        ).all()
+        
+        for i, supplier in enumerate(db_suppliers[:5], 1):  # Limit to 5 suppliers
+            supp = SubElement(suppliers, 'Supplier')
+            SubElement(supp, 'SupplierID').text = str(supplier.id)
+            SubElement(supp, 'AccountID').text = '22'
+            SubElement(supp, 'SupplierTaxID').text = supplier.tax_number or f'99999998{i:01d}'
+            SubElement(supp, 'CompanyName').text = supplier.name
+            
+            # Billing address
+            billing_addr = SubElement(supp, 'BillingAddress')
+            SubElement(billing_addr, 'AddressDetail').text = supplier.address or 'Endereço não especificado'
+            SubElement(billing_addr, 'City').text = supplier.city or 'Lisboa'
+            SubElement(billing_addr, 'PostalCode').text = supplier.postal_code or '1000-000'
+            SubElement(billing_addr, 'Country').text = supplier.country or 'PT'
+            
+            SubElement(supp, 'SelfBillingIndicator').text = '0'
+            
+    except:
+        # Fallback supplier data
+        supp = SubElement(suppliers, 'Supplier')
+        SubElement(supp, 'SupplierID').text = '1'
+        SubElement(supp, 'AccountID').text = '22'
+        SubElement(supp, 'SupplierTaxID').text = '999999989'
+        SubElement(supp, 'CompanyName').text = 'Fornecedor Geral'
+        
+        billing_addr = SubElement(supp, 'BillingAddress')
+        SubElement(billing_addr, 'AddressDetail').text = 'Rua do Fornecedor, 789'
+        SubElement(billing_addr, 'City').text = 'Braga'
+        SubElement(billing_addr, 'PostalCode').text = '4700-000'
+        SubElement(billing_addr, 'Country').text = 'PT'
+        
+        SubElement(supp, 'SelfBillingIndicator').text = '0'
+    
+    # Products
+    products = SubElement(master_files, 'Product')
+    
+    try:
+        from models import Product
+        db_products = Product.query.filter(
+            Product.created_at >= start_date,
+            Product.created_at <= end_date
+        ).all()
+        
+        for product in db_products[:20]:  # Limit to 20 products
+            prod = SubElement(products, 'Product')
+            SubElement(prod, 'ProductType').text = 'P'
+            SubElement(prod, 'ProductCode').text = product.code or f'PROD{product.id:04d}'
+            SubElement(prod, 'ProductGroup').text = product.category.name if product.category else 'Geral'
+            SubElement(prod, 'ProductDescription').text = product.name
+            SubElement(prod, 'ProductNumberCode').text = str(product.id)
+            
+    except:
+        # Fallback product data
+        prod = SubElement(products, 'Product')
+        SubElement(prod, 'ProductType').text = 'P'
+        SubElement(prod, 'ProductCode').text = 'PROD0001'
+        SubElement(prod, 'ProductGroup').text = 'Geral'
+        SubElement(prod, 'ProductDescription').text = 'Produto Demonstração'
+        SubElement(prod, 'ProductNumberCode').text = '1'
+    
+    # Tax Table
+    tax_table = SubElement(master_files, 'TaxTable')
+    
+    # IVA Normal (23%)
+    tax_entry = SubElement(tax_table, 'TaxTableEntry')
+    SubElement(tax_entry, 'TaxType').text = 'IVA'
+    SubElement(tax_entry, 'TaxCountryRegion').text = 'PT'
+    SubElement(tax_entry, 'TaxCode').text = 'NOR'
+    SubElement(tax_entry, 'Description').text = 'IVA Normal'
+    SubElement(tax_entry, 'TaxPercentage').text = '23.00'
+    
+    # IVA Reduzida (6%)
+    tax_entry2 = SubElement(tax_table, 'TaxTableEntry')
+    SubElement(tax_entry2, 'TaxType').text = 'IVA'
+    SubElement(tax_entry2, 'TaxCountryRegion').text = 'PT'
+    SubElement(tax_entry2, 'TaxCode').text = 'RED'
+    SubElement(tax_entry2, 'Description').text = 'IVA Reduzida'
+    SubElement(tax_entry2, 'TaxPercentage').text = '6.00'
+    
+    # IVA Intermédia (13%)
+    tax_entry3 = SubElement(tax_table, 'TaxTableEntry')
+    SubElement(tax_entry3, 'TaxType').text = 'IVA'
+    SubElement(tax_entry3, 'TaxCountryRegion').text = 'PT'
+    SubElement(tax_entry3, 'TaxCode').text = 'INT'
+    SubElement(tax_entry3, 'Description').text = 'IVA Intermédia'
+    SubElement(tax_entry3, 'TaxPercentage').text = '13.00'
+    
+    # Generate Sales Invoices section
+    source_documents = SubElement(root, 'SourceDocuments')
+    sales_invoices = SubElement(source_documents, 'SalesInvoices')
+    
+    # Sales invoices summary
+    SubElement(sales_invoices, 'NumberOfEntries').text = '0'
+    SubElement(sales_invoices, 'TotalDebit').text = '0.00'
+    SubElement(sales_invoices, 'TotalCredit').text = '0.00'
+    
+    # Payments section
+    payments = SubElement(source_documents, 'Payments')
+    SubElement(payments, 'NumberOfEntries').text = '0'
+    SubElement(payments, 'TotalDebit').text = '0.00'
+    SubElement(payments, 'TotalCredit').text = '0.00'
+    
+    # Convert to string with proper formatting
+    rough_string = tostring(root, encoding='unicode')
+    reparsed = minidom.parseString(rough_string)
+    pretty = reparsed.toprettyxml(indent='  ', encoding='UTF-8')
+    
+    return pretty
+
 # Database setup using direct SQL
 @app.route('/setup-db')
 def setup_db():

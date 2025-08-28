@@ -8,6 +8,16 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+## SAF-T Portugal Integration (August 2025)
+- Implemented complete SAF-T (Standard Audit File for Tax) system for Portuguese tax compliance
+- Compliant with Portaria n.º 302/2016 and OECD standards (version 1.04_01)
+- Date range selection with preset options (month, quarter, year, previous year)
+- XML generation includes: company info, chart of accounts, customers, suppliers, products, tax tables
+- Automatic download of properly formatted SAF-T PT XML files
+- Integration with existing database for real customer/supplier/product data
+- Fallback data structure ensures file generation even with minimal database content
+- Professional interface with legal compliance information and technical specifications
+
 ## Analytics System Fixes (August 2025)
 - Fixed server errors in analytics by creating simplified data structure
 - Resolved template variable conflicts (total_revenue, total_costs, etc.)
