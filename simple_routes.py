@@ -162,7 +162,7 @@ def analytics():
         'low_stock_products': []
     }
     
-    return render_template('analytics.html', analytics=analytics_data)
+    return render_template('analytics_simple.html', analytics=analytics_data)
 
 # Database setup using direct SQL
 @app.route('/setup-db')

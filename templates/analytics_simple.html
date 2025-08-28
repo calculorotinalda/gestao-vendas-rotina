@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Análises - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-line me-2"></i>Análises do Sistema</h2>
+    <div class="btn-group">
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+            <i class="fas fa-sync-alt me-1"></i>Atualizar
+        </button>
+    </div>
+</div>
+
+<!-- Key Performance Indicators -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="display-6 text-primary mb-2">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="text-primary">{{ "%.1f"|format(analytics.revenue_growth) }}%</h3>
+                <p class="text-muted mb-0">Crescimento de Receitas</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="display-6 text-success mb-2">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h3 class="text-success">{{ "%.1f"|format(analytics.profit_margin) }}%</h3>
+                <p class="text-muted mb-0">Margem de Lucro</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="display-6 text-warning mb-2">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h3 class="text-warning">€{{ "%.2f"|format(analytics.avg_order_value) }}</h3>
+                <p class="text-muted mb-0">Valor Médio por Venda</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="display-6 text-info mb-2">
+                    <i class="fas fa-sync-alt"></i>
+                </div>
+                <h3 class="text-info">{{ "%.1f"|format(analytics.inventory_turnover) }}</h3>
+                <p class="text-muted mb-0">Rotação de Inventário</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Overview -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Vendas vs Compras</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="sales-chart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="fas fa-pie-chart me-2"></i>Distribuição por Categoria</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="category-chart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Resumo Financeiro</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h4 class="text-success">€{{ "%.2f"|format(analytics.total_sales) }}</h4>
+                            <p class="text-muted mb-0">Vendas Totais</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h4 class="text-danger">€{{ "%.2f"|format(analytics.total_purchases) }}</h4>
+                            <p class="text-muted mb-0">Compras Totais</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h4 class="text-primary">€{{ "%.2f"|format(analytics.profit) }}</h4>
+                            <p class="text-muted mb-0">Lucro</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h4 class="text-info">{{ analytics.total_customers }}</h4>
+                            <p class="text-muted mb-0">Clientes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Products -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Produtos Top</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="products-chart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Charts setup
+document.addEventListener('DOMContentLoaded', function() {
+    // Sales vs Purchases Chart
+    const salesCtx = document.getElementById('sales-chart').getContext('2d');
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: ['30 dias', '7 dias', 'Total'],
+            datasets: [{
+                label: 'Vendas',
+                data: {{ analytics.sales_data|safe }},
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Compras',
+                data: {{ analytics.purchase_data|safe }},
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            }
+        }
+    });
+    
+    // Category Chart
+    const categoryCtx = document.getElementById('category-chart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ analytics.category_labels|safe }},
+            datasets: [{
+                data: {{ analytics.category_data|safe }},
+                backgroundColor: [
+                    '#007bff', '#28a745', '#ffc107', '#dc3545', '#6610f2'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Products Chart
+    const productsCtx = document.getElementById('products-chart').getContext('2d');
+    new Chart(productsCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ analytics.top_products_labels|safe }},
+            datasets: [{
+                label: 'Vendas',
+                data: {{ analytics.top_products_data|safe }},
+                backgroundColor: '#007bff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
