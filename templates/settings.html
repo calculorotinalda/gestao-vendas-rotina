@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações Avançadas - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-cogs me-2"></i>Configurações Avançadas</h2>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Configurações</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <!-- System Settings -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-sliders-h me-2"></i>
+                    Configurações do Sistema
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_system_settings') }}">
+                    <div class="row">
+                        <!-- Currency and Format Settings -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">Formato e Moeda</h6>
+                            
+                            <div class="mb-3">
+                                <label for="currency" class="form-label">Moeda</label>
+                                <select class="form-select" id="currency" name="currency">
+                                    <option value="EUR" {{ 'selected' if session.get('system_settings', {}).get('currency', 'EUR') == 'EUR' }}>Euro (€)</option>
+                                    <option value="USD" {{ 'selected' if session.get('system_settings', {}).get('currency') == 'USD' }}>Dólar Americano ($)</option>
+                                    <option value="GBP" {{ 'selected' if session.get('system_settings', {}).get('currency') == 'GBP' }}>Libra Esterlina (£)</option>
+                                    <option value="BRL" {{ 'selected' if session.get('system_settings', {}).get('currency') == 'BRL' }}>Real Brasileiro (R$)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="date_format" class="form-label">Formato de Data</label>
+                                <select class="form-select" id="date_format" name="date_format">
+                                    <option value="dd/mm/yyyy" {{ 'selected' if session.get('system_settings', {}).get('date_format', 'dd/mm/yyyy') == 'dd/mm/yyyy' }}>dd/mm/aaaa</option>
+                                    <option value="mm/dd/yyyy" {{ 'selected' if session.get('system_settings', {}).get('date_format') == 'mm/dd/yyyy' }}>mm/dd/aaaa</option>
+                                    <option value="yyyy-mm-dd" {{ 'selected' if session.get('system_settings', {}).get('date_format') == 'yyyy-mm-dd' }}>aaaa-mm-dd</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="decimal_places" class="form-label">Casas Decimais</label>
+                                <select class="form-select" id="decimal_places" name="decimal_places">
+                                    <option value="0" {{ 'selected' if session.get('system_settings', {}).get('decimal_places', 2) == 0 }}>0</option>
+                                    <option value="2" {{ 'selected' if session.get('system_settings', {}).get('decimal_places', 2) == 2 }}>2</option>
+                                    <option value="3" {{ 'selected' if session.get('system_settings', {}).get('decimal_places', 2) == 3 }}>3</option>
+                                </select>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="thousand_separator" class="form-label">Separador de Milhares</label>
+                                    <select class="form-select" id="thousand_separator" name="thousand_separator">
+                                        <option value="," {{ 'selected' if session.get('system_settings', {}).get('thousand_separator', ',') == ',' }}>Vírgula (,)</option>
+                                        <option value="." {{ 'selected' if session.get('system_settings', {}).get('thousand_separator') == '.' }}>Ponto (.)</option>
+                                        <option value=" " {{ 'selected' if session.get('system_settings', {}).get('thousand_separator') == ' ' }}>Espaço ( )</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="decimal_separator" class="form-label">Separador Decimal</label>
+                                    <select class="form-select" id="decimal_separator" name="decimal_separator">
+                                        <option value="." {{ 'selected' if session.get('system_settings', {}).get('decimal_separator', '.') == '.' }}>Ponto (.)</option>
+                                        <option value="," {{ 'selected' if session.get('system_settings', {}).get('decimal_separator') == ',' }}>Vírgula (,)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Inventory and Notifications -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">Inventário e Notificações</h6>
+                            
+                            <div class="mb-3">
+                                <label for="low_stock_threshold" class="form-label">Limite de Stock Baixo</label>
+                                <input type="number" class="form-control" id="low_stock_threshold" name="low_stock_threshold" 
+                                       value="{{ session.get('system_settings', {}).get('low_stock_threshold', 10) }}" min="1" max="100">
+                                <div class="form-text">Quantidade mínima para alertas de stock baixo</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications"
+                                           {{ 'checked' if session.get('system_settings', {}).get('email_notifications', True) }}>
+                                    <label class="form-check-label" for="email_notifications">
+                                        <i class="fas fa-envelope me-1"></i>Notificações por Email
+                                    </label>
+                                </div>
+                                <div class="form-text">Receber alertas de stock baixo e outras notificações</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="auto_backup" name="auto_backup"
+                                           {{ 'checked' if session.get('system_settings', {}).get('auto_backup', True) }}>
+                                    <label class="form-check-label" for="auto_backup">
+                                        <i class="fas fa-database me-1"></i>Backup Automático
+                                    </label>
+                                </div>
+                                <div class="form-text">Criar backups automáticos da base de dados</div>
+                            </div>
+                            
+                            <!-- Preview -->
+                            <div class="bg-light p-3 rounded">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-eye me-1"></i>Pré-visualização
+                                </h6>
+                                <div class="mb-1">
+                                    <small class="text-muted">Valor:</small>
+                                    <span id="value-preview">1.234,56 €</span>
+                                </div>
+                                <div class="mb-1">
+                                    <small class="text-muted">Data:</small>
+                                    <span id="date-preview">28/08/2025</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            Guardar Configurações do Sistema
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Settings Cards -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Segurança
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Sessão Automática</label>
+                    <select class="form-select">
+                        <option>30 minutos</option>
+                        <option selected>1 hora</option>
+                        <option>2 horas</option>
+                        <option>4 horas</option>
+                    </select>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" checked>
+                    <label class="form-check-label">
+                        Logs de Auditoria
+                    </label>
+                </div>
+                
+                <button class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-key me-1"></i>
+                    Alterar Password
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-download me-2"></i>
+                    Backup e Exportação
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Frequência de Backup</label>
+                    <select class="form-select">
+                        <option>Diário</option>
+                        <option selected>Semanal</option>
+                        <option>Mensal</option>
+                    </select>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-download me-1"></i>
+                        Criar Backup Agora
+                    </button>
+                    <button class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-file-export me-1"></i>
+                        Exportar Dados
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update preview when format changes
+document.addEventListener('DOMContentLoaded', function() {
+    const currencySelect = document.getElementById('currency');
+    const thousandSeparatorSelect = document.getElementById('thousand_separator');
+    const decimalSeparatorSelect = document.getElementById('decimal_separator');
+    const decimalPlacesSelect = document.getElementById('decimal_places');
+    const dateFormatSelect = document.getElementById('date_format');
+    
+    function updatePreview() {
+        const currency = currencySelect.value;
+        const thousandSep = thousandSeparatorSelect.value;
+        const decimalSep = decimalSeparatorSelect.value;
+        const decimalPlaces = parseInt(decimalPlacesSelect.value);
+        const dateFormat = dateFormatSelect.value;
+        
+        // Currency symbols
+        const symbols = {
+            'EUR': '€',
+            'USD': '$',
+            'GBP': '£',
+            'BRL': 'R$'
+        };
+        
+        // Format value
+        let value = '1234' + thousandSep + '56';
+        if (decimalPlaces > 0) {
+            value += decimalSep + '00'.substring(0, decimalPlaces);
+        }
+        
+        document.getElementById('value-preview').textContent = value + ' ' + symbols[currency];
+        
+        // Format date
+        const today = new Date();
+        let dateStr = '';
+        switch(dateFormat) {
+            case 'dd/mm/yyyy':
+                dateStr = today.getDate().toString().padStart(2, '0') + '/' + 
+                         (today.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                         today.getFullYear();
+                break;
+            case 'mm/dd/yyyy':
+                dateStr = (today.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                         today.getDate().toString().padStart(2, '0') + '/' + 
+                         today.getFullYear();
+                break;
+            case 'yyyy-mm-dd':
+                dateStr = today.getFullYear() + '-' +
+                         (today.getMonth() + 1).toString().padStart(2, '0') + '-' +
+                         today.getDate().toString().padStart(2, '0');
+                break;
+        }
+        document.getElementById('date-preview').textContent = dateStr;
+    }
+    
+    // Add event listeners
+    [currencySelect, thousandSeparatorSelect, decimalSeparatorSelect, 
+     decimalPlacesSelect, dateFormatSelect].forEach(select => {
+        select.addEventListener('change', updatePreview);
+    });
+    
+    // Initial update
+    updatePreview();
+});
+</script>
+{% endblock %}

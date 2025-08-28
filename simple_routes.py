@@ -436,6 +436,94 @@ def generate_saft_xml(start_date, end_date):
     
     return pretty
 
+@app.route('/settings')
+def settings():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    return render_template('settings.html')
+
+@app.route('/company-settings')
+def company_settings():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    return render_template('company_settings.html')
+
+@app.route('/update-company-settings', methods=['POST'])
+def update_company_settings():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        # Get form data
+        company_name = request.form.get('company_name', 'GestVendas')
+        tax_number = request.form.get('tax_number', '999999990')
+        address = request.form.get('address', '')
+        city = request.form.get('city', '')
+        postal_code = request.form.get('postal_code', '')
+        country = request.form.get('country', 'PT')
+        phone = request.form.get('phone', '')
+        email = request.form.get('email', '')
+        website = request.form.get('website', '')
+        
+        # For now, store in session (could be extended to database)
+        session['company_settings'] = {
+            'company_name': company_name,
+            'tax_number': tax_number,
+            'address': address,
+            'city': city,
+            'postal_code': postal_code,
+            'country': country,
+            'phone': phone,
+            'email': email,
+            'website': website
+        }
+        
+        flash('Configurações da empresa atualizadas com sucesso!', 'success')
+        
+    except Exception as e:
+        print(f"Company settings error: {e}")
+        flash('Erro ao atualizar configurações da empresa.', 'error')
+    
+    return redirect(url_for('company_settings'))
+
+@app.route('/update-system-settings', methods=['POST'])
+def update_system_settings():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    
+    try:
+        # Get form data
+        currency = request.form.get('currency', 'EUR')
+        date_format = request.form.get('date_format', 'dd/mm/yyyy')
+        decimal_places = int(request.form.get('decimal_places', 2))
+        thousand_separator = request.form.get('thousand_separator', ',')
+        decimal_separator = request.form.get('decimal_separator', '.')
+        auto_backup = request.form.get('auto_backup') == 'on'
+        email_notifications = request.form.get('email_notifications') == 'on'
+        low_stock_threshold = int(request.form.get('low_stock_threshold', 10))
+        
+        # Store in session
+        session['system_settings'] = {
+            'currency': currency,
+            'date_format': date_format,
+            'decimal_places': decimal_places,
+            'thousand_separator': thousand_separator,
+            'decimal_separator': decimal_separator,
+            'auto_backup': auto_backup,
+            'email_notifications': email_notifications,
+            'low_stock_threshold': low_stock_threshold
+        }
+        
+        flash('Configurações do sistema atualizadas com sucesso!', 'success')
+        
+    except Exception as e:
+        print(f"System settings error: {e}")
+        flash('Erro ao atualizar configurações do sistema.', 'error')
+    
+    return redirect(url_for('settings'))
+
 # Database setup using direct SQL
 @app.route('/setup-db')
 def setup_db():

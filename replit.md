@@ -8,6 +8,26 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+## Advanced Settings System (August 2025)
+- Implemented comprehensive system settings with currency, date format, and decimal configuration
+- Real-time preview of formatting changes for values and dates
+- Support for multiple currencies: EUR, USD, GBP, BRL with appropriate symbols
+- Configurable thousand/decimal separators and decimal places
+- Low stock threshold configuration and notification preferences
+- Security settings including session timeout and audit logs
+- Backup and export functionality controls
+- All settings stored in user session with persistence
+
+## Company Configuration System (August 2025)
+- Complete company information management with real-time preview
+- Required fields: company name and tax number (NIF/NIPC)
+- Full address management: street, city, postal code, country selection
+- Contact information: phone, email, website
+- Multi-country support with proper country selection
+- Integration with SAF-T generation using company data
+- Professional form validation and user experience
+- Settings used across invoices, reports, and legal documents
+
 ## SAF-T Portugal Integration (August 2025)
 - Implemented complete SAF-T (Standard Audit File for Tax) system for Portuguese tax compliance
 - Compliant with Portaria n.º 302/2016 and OECD standards (version 1.04_01)

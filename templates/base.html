@@ -98,6 +98,14 @@
             </div>
             
             <div class="sidebar-heading">Sistema</div>
+            <div class="sidebar-item {{ 'active' if request.endpoint == 'settings' }}" onclick="window.location.href='{{ url_for('settings') }}'">
+                <i class="fas fa-cogs"></i>
+                <span class="text">Configurações Avançadas</span>
+            </div>
+            <div class="sidebar-item {{ 'active' if request.endpoint == 'company_settings' }}" onclick="window.location.href='{{ url_for('company_settings') }}'">
+                <i class="fas fa-building"></i>
+                <span class="text">Configurações da Empresa</span>
+            </div>
             {% if session.user_role == 'admin' %}
             <div class="sidebar-item {{ 'active' if request.endpoint == 'admin_activate_users' }}" onclick="window.location.href='{{ url_for('admin_activate_users') }}'">
                 <i class="fas fa-user-cog"></i>
@@ -105,11 +113,11 @@
             </div>
             {% endif %}
             <div class="sidebar-item" onclick="window.location.href='/setup-db'">
-                <i class="fas fa-cogs"></i>
+                <i class="fas fa-database"></i>
                 <span class="text">Configurar Base de Dados</span>
             </div>
             <div class="sidebar-item" onclick="window.location.href='/test-db'">
-                <i class="fas fa-database"></i>
+                <i class="fas fa-wrench"></i>
                 <span class="text">Testar Base de Dados</span>
             </div>
             <div class="sidebar-item" onclick="window.location.href='{{ url_for('logout') }}'">

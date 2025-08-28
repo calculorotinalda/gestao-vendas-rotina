@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações da Empresa - GestVendas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-building me-2"></i>Configurações da Empresa</h2>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Empresa</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Informações da Empresa
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_company_settings') }}">
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="company_name" class="form-label">
+                                <i class="fas fa-building me-1"></i>Nome da Empresa *
+                            </label>
+                            <input type="text" class="form-control" id="company_name" name="company_name" 
+                                   value="{{ session.get('company_settings', {}).get('company_name', 'GestVendas') }}" required>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="tax_number" class="form-label">
+                                <i class="fas fa-hashtag me-1"></i>NIF/NIPC *
+                            </label>
+                            <input type="text" class="form-control" id="tax_number" name="tax_number" 
+                                   value="{{ session.get('company_settings', {}).get('tax_number', '999999990') }}" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Address Information -->
+                    <h6 class="text-primary mt-4 mb-3">
+                        <i class="fas fa-map-marker-alt me-1"></i>Morada
+                    </h6>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Endereço</label>
+                        <textarea class="form-control" id="address" name="address" rows="2" 
+                                  placeholder="Rua, número, andar, etc.">{{ session.get('company_settings', {}).get('address', '') }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="city" class="form-label">Cidade</label>
+                            <input type="text" class="form-control" id="city" name="city" 
+                                   value="{{ session.get('company_settings', {}).get('city', 'Lisboa') }}">
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="postal_code" class="form-label">Código Postal</label>
+                            <input type="text" class="form-control" id="postal_code" name="postal_code" 
+                                   value="{{ session.get('company_settings', {}).get('postal_code', '1000-000') }}"
+                                   placeholder="0000-000">
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="country" class="form-label">País</label>
+                            <select class="form-select" id="country" name="country">
+                                <option value="PT" {{ 'selected' if session.get('company_settings', {}).get('country', 'PT') == 'PT' }}>Portugal</option>
+                                <option value="ES" {{ 'selected' if session.get('company_settings', {}).get('country') == 'ES' }}>Espanha</option>
+                                <option value="FR" {{ 'selected' if session.get('company_settings', {}).get('country') == 'FR' }}>França</option>
+                                <option value="BR" {{ 'selected' if session.get('company_settings', {}).get('country') == 'BR' }}>Brasil</option>
+                                <option value="US" {{ 'selected' if session.get('company_settings', {}).get('country') == 'US' }}>Estados Unidos</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <h6 class="text-primary mt-4 mb-3">
+                        <i class="fas fa-phone me-1"></i>Contactos
+                    </h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">
+                                <i class="fas fa-phone me-1"></i>Telefone
+                            </label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="{{ session.get('company_settings', {}).get('phone', '') }}"
+                                   placeholder="+351 123 456 789">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ session.get('company_settings', {}).get('email', '') }}"
+                                   placeholder="info@empresa.pt">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="website" class="form-label">
+                            <i class="fas fa-globe me-1"></i>Website
+                        </label>
+                        <input type="url" class="form-control" id="website" name="website" 
+                               value="{{ session.get('company_settings', {}).get('website', '') }}"
+                               placeholder="https://www.empresa.pt">
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                            <i class="fas fa-undo me-1"></i>Repor
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            Guardar Configurações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info Panel -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações Importantes
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <small>
+                        <i class="fas fa-lightbulb me-1"></i>
+                        <strong>Dica:</strong> Estas configurações são utilizadas nos documentos SAF-T, relatórios e facturas.
+                    </small>
+                </div>
+                
+                <h6 class="text-primary mb-2">Campos Obrigatórios</h6>
+                <ul class="list-unstyled mb-3">
+                    <li><i class="fas fa-check text-success me-2"></i>Nome da Empresa</li>
+                    <li><i class="fas fa-check text-success me-2"></i>NIF/NIPC</li>
+                </ul>
+                
+                <h6 class="text-primary mb-2">Utilizações</h6>
+                <ul class="list-unstyled mb-0">
+                    <li><i class="fas fa-file-export text-primary me-2"></i>Ficheiros SAF-T</li>
+                    <li><i class="fas fa-file-invoice text-success me-2"></i>Facturas e Recibos</li>
+                    <li><i class="fas fa-chart-bar text-info me-2"></i>Relatórios</li>
+                    <li><i class="fas fa-envelope text-warning me-2"></i>Emails automáticos</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Company Preview -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-eye me-2"></i>
+                    Pré-visualização
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="company-preview" class="text-center">
+                    <h6 class="fw-bold text-primary" id="preview-name">GestVendas</h6>
+                    <p class="mb-1 text-muted" id="preview-nif">NIF: 999999990</p>
+                    <p class="mb-1" id="preview-address">Rua Exemplo, 123</p>
+                    <p class="mb-1" id="preview-location">1000-000 Lisboa, Portugal</p>
+                    <p class="mb-1" id="preview-phone">+351 123 456 789</p>
+                    <p class="mb-0" id="preview-email">info@gestvendas.pt</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function resetForm() {
+    if (confirm('Tem a certeza que pretende repor as configurações originais?')) {
+        document.getElementById('company_name').value = 'GestVendas';
+        document.getElementById('tax_number').value = '999999990';
+        document.getElementById('address').value = '';
+        document.getElementById('city').value = 'Lisboa';
+        document.getElementById('postal_code').value = '1000-000';
+        document.getElementById('country').value = 'PT';
+        document.getElementById('phone').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('website').value = '';
+        updatePreview();
+    }
+}
+
+function updatePreview() {
+    const name = document.getElementById('company_name').value || 'Nome da Empresa';
+    const nif = document.getElementById('tax_number').value || 'NIF não definido';
+    const address = document.getElementById('address').value || 'Endereço não definido';
+    const city = document.getElementById('city').value || 'Cidade';
+    const postalCode = document.getElementById('postal_code').value || 'Código Postal';
+    const country = document.getElementById('country').selectedOptions[0].text || 'País';
+    const phone = document.getElementById('phone').value || 'Telefone não definido';
+    const email = document.getElementById('email').value || 'Email não definido';
+    
+    document.getElementById('preview-name').textContent = name;
+    document.getElementById('preview-nif').textContent = 'NIF: ' + nif;
+    document.getElementById('preview-address').textContent = address;
+    document.getElementById('preview-location').textContent = postalCode + ' ' + city + ', ' + country;
+    document.getElementById('preview-phone').textContent = phone;
+    document.getElementById('preview-email').textContent = email;
+}
+
+// Add event listeners for real-time preview
+document.addEventListener('DOMContentLoaded', function() {
+    const fields = ['company_name', 'tax_number', 'address', 'city', 'postal_code', 'country', 'phone', 'email'];
+    fields.forEach(field => {
+        document.getElementById(field).addEventListener('input', updatePreview);
+        document.getElementById(field).addEventListener('change', updatePreview);
+    });
+    
+    // Initial preview update
+    updatePreview();
+});
+</script>
+{% endblock %}
